@@ -23,6 +23,7 @@ A simple, effective Pomodoro timer app for Android built with modern technologie
 ## 🛠️ Tech Stack
 
 - **Language:** Kotlin 1.9.22
+- **Java:** JDK 17
 - **UI Framework:** Jetpack Compose 2024.02.00
 - **Architecture:** MVVM + Clean Architecture
 - **Dependency Injection:** Hilt 2.48
@@ -39,6 +40,7 @@ A simple, effective Pomodoro timer app for Android built with modern technologie
 - Android Studio Hedgehog (2023.3.1) or later
 - Android SDK API 24+ (Android 7.0)
 - Kotlin 1.9.22+
+- Java 17 (JDK 17)
 
 ### Setup
 
@@ -120,26 +122,6 @@ app/src/androidTest/       # Integration tests
 │   └── presentation/      # UI tests
 ```
 
-## 🧪 Testing Strategy
-
-### Unit Tests
-- **Location**: `src/test/`
-- **Framework**: JUnit 4
-- **Mocking**: Mockito
-- **Coroutines**: Test dispatchers
-- **Database**: In-memory Room database
-
-### Integration Tests
-- **Location**: `src/androidTest/`
-- **Framework**: AndroidJUnit4
-- **Hilt**: Custom test runner
-- **Compose**: UI testing
-
-### Test Infrastructure
-- **BaseUnitTest**: Common test setup
-- **TestUtils**: Reusable test data
-- **TestDatabaseModule**: In-memory database for testing
-- **TestDispatchers**: Coroutine test utilities
 
 ## 🎯 Development Roadmap
 
