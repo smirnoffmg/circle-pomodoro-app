@@ -13,7 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.smirnoffmg.pomodorotimer.data.db.TimerRecord
+import com.smirnoffmg.pomodorotimer.domain.model.TimerRecord
 
 @Composable
 fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
@@ -34,5 +34,5 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
 
 @Composable
 fun TimerRecordItem(record: TimerRecord) {
-    Text("Record: ${record.id}, Duration: ${record.duration / 1000}s, Timestamp: ${record.timestamp}")
+    Text("Record: ${record.id}, Duration: ${record.durationSeconds}s, Timestamp: ${record.startTimestamp}")
 }

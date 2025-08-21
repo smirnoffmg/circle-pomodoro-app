@@ -15,8 +15,9 @@ class PomodoroApplication : Application() {
     }
 
     private fun setupWorkManager() {
-        val workRequest = PeriodicWorkRequestBuilder<TimerWorker>(15, TimeUnit.MINUTES)
-            .build()
+        val workRequest =
+            PeriodicWorkRequestBuilder<TimerWorker>(15, TimeUnit.MINUTES)
+                .build()
 
         WorkManager.getInstance(this).enqueue(workRequest)
     }

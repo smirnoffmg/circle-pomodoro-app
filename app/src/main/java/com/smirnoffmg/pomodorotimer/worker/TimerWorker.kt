@@ -1,25 +1,33 @@
 package com.smirnoffmg.pomodorotimer.worker
 
 import android.content.Context
-import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
+import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
-import com.smirnoffmg.pomodorotimer.data.repository.TimerRepository
+import com.smirnoffmg.pomodorotimer.domain.model.TimerRecord
+import com.smirnoffmg.pomodorotimer.domain.usecase.AddTimerRecordUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
 @HiltWorker
-class TimerWorker @AssistedInject constructor(
-    @Assisted appContext: Context,
-    @Assisted workerParams: WorkerParameters,
-    private val repository: TimerRepository
-) : CoroutineWorker(appContext, workerParams) {
-
-    override suspend fun doWork(): Result {
-        Log.d("TimerWorker", "WorkManager is running")
-        // Here you can add any background task, for example, fetching data from a server
-        // and storing it in the database using the repository.
-        return Result.success()
+class TimerWorker
+    @AssistedInject
+    constructor(
+        @Assisted context: Context,
+        @Assisted workerParameters: WorkerParameters,
+        private val addTimerRecordUseCase: AddTimerRecordUseCase,
+    ) : CoroutineWorker(context, workerParameters) {
+        override suspend fun doWork(): ListenableWorker.Result =
+            try {
+                val record =
+                    TimerRecord(
+                        durationSeconds = 25 * 60,
+                        startTimestamp = System.currentTimeMillis(),
+                    )
+                addTimerRecordUseCase(record)
+                ListenableWorker.Result.success()
+            } catch (e: Exception) {
+                ListenableWorker.Result.failure()
+            }
     }
-}

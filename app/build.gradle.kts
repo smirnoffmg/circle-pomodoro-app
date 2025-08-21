@@ -2,10 +2,10 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-    alias(libs.plugins.google.gms.google.services)
+    id("com.google.gms.google-services")
     alias(libs.plugins.google.firebase.crashlytics)
     alias(libs.plugins.hilt.android) // Hilt
-    alias(libs.plugins.ksp)         // KSP
+    alias(libs.plugins.ksp) // KSP
     alias(libs.plugins.room)
 }
 
@@ -31,12 +31,11 @@ android {
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
         debug {
             isDebuggable = true
-            applicationIdSuffix = ".debug"
         }
     }
 
@@ -70,6 +69,7 @@ dependencies {
     implementation(libs.ui.graphics)
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
+    implementation("com.google.android.material:material:1.11.0")
     implementation(libs.activity.compose)
     implementation(libs.navigation.compose)
 
@@ -97,8 +97,6 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics.ktx)
     implementation(libs.firebase.crashlytics.ktx)
-    implementation(libs.firebase.auth.ktx)
-    implementation(libs.firebase.firestore.ktx)
 
     // DataStore
     implementation(libs.datastore.preferences)
