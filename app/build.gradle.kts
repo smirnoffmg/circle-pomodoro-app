@@ -1,10 +1,11 @@
+// Apply all required plugins in the app module
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.google.firebase.crashlytics)
-    alias(libs.plugins.hilt.android)
-    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt.android) // Hilt
+    alias(libs.plugins.ksp)         // KSP
     alias(libs.plugins.room)
 }
 
@@ -55,12 +56,6 @@ android {
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.8"
-    }
-
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
     }
 
     room {
