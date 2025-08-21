@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.google.firebase.crashlytics)
     alias(libs.plugins.hilt.android)
-    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.room)
 }
 
@@ -87,12 +87,12 @@ dependencies {
     // Hilt Dependency Injection
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
 
     // Room Database
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
-    kapt(libs.room.compiler)
+    ksp(libs.room.compiler)
 
     // WorkManager
     implementation(libs.work.runtime.ktx)
@@ -124,8 +124,4 @@ dependencies {
     // Debug tools
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
-}
-
-kapt {
-    correctErrorTypes = true
 }
