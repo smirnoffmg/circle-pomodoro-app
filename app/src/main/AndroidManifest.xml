@@ -32,10 +32,5 @@
             </intent-filter>
         </activity>
 
-        <!-- Timer Service -->
-        <service
-            android:name=".service.timer.PomodoroTimerService"
-            android:foregroundServiceType="mediaPlayback" />
-
     </application>
 </manifest>
