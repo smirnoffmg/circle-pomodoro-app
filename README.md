@@ -4,6 +4,10 @@ A simple, effective Pomodoro timer app for Android built with modern technologie
 
 ## 📱 Features
 
+### Screenshots
+
+![Screenshot 1](docs/screenshot.png)
+
 ### Core Features (MVP)
 
 - ✅ **Reliable background timer** - Works even when app is minimized
