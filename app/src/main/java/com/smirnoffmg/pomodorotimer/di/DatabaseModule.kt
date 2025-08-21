@@ -8,6 +8,7 @@ import com.smirnoffmg.pomodorotimer.data.local.db.dao.TimerRecordDao
 import com.smirnoffmg.pomodorotimer.data.repository.PomodoroRepositoryImpl
 import com.smirnoffmg.pomodorotimer.data.repository.TimerRepository
 import com.smirnoffmg.pomodorotimer.domain.repository.PomodoroRepository
+import com.smirnoffmg.pomodorotimer.service.TimerServiceManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -75,4 +76,14 @@ object DatabaseModule {
     @Singleton
     fun providePomodoroRepository(dao: PomodoroSessionDao): PomodoroRepository =
         PomodoroRepositoryImpl(dao)
+
+    /**
+     * Provides TimerServiceManager following Single Responsibility Principle.
+     * Only handles timer service lifecycle management.
+     */
+    @Provides
+    @Singleton
+    fun provideTimerServiceManager(
+        @ApplicationContext context: Context
+    ): TimerServiceManager = TimerServiceManager(context)
 }

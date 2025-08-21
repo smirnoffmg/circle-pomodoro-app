@@ -87,6 +87,8 @@ dependencies {
     implementation(libs.ui.graphics)
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
+    implementation(libs.material.icons.core)
+    implementation(libs.material.icons.extended)
     implementation("com.google.android.material:material:1.11.0")
     implementation(libs.activity.compose)
     implementation(libs.navigation.compose)

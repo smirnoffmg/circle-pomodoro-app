@@ -1,3 +1,28 @@
 <resources>
-    <string name="app_name">PomodoroTimer</string>
+    <string name="app_name">Pomodoro Timer</string>
+    
+    <!-- Timer Controls -->
+    <string name="start">Start</string>
+    <string name="pause">Pause</string>
+    <string name="stop">Stop</string>
+    
+    <!-- Timer Actions -->
+    <string name="start_timer">Start timer</string>
+    <string name="pause_timer">Pause timer</string>
+    <string name="stop_timer">Stop timer</string>
+    
+    <!-- Timer States -->
+    <string name="timer_running">Timer is running</string>
+    <string name="timer_paused">Timer is paused</string>
+    <string name="timer_stopped">Timer is stopped</string>
+    <string name="timer_completed">Timer completed</string>
+    
+    <!-- Timer Display -->
+    <string name="remaining_time">Remaining time: %1$s</string>
+    <string name="timer_progress">Timer progress: %1$d percent</string>
+    
+    <!-- Accessibility -->
+    <string name="timer_display_description">Timer display showing remaining time</string>
+    <string name="timer_progress_description">Circular progress indicator showing timer progress</string>
+    <string name="timer_controls_description">Timer control buttons</string>
 </resources>
