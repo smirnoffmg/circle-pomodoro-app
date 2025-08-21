@@ -5,13 +5,14 @@ import com.smirnoffmg.pomodorotimer.data.local.db.entity.TimerRecordEntity
 import com.smirnoffmg.pomodorotimer.data.local.db.entity.toEntity
 import com.smirnoffmg.pomodorotimer.domain.model.TimerRecord
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class TimerRepository @Inject constructor(
     private val timerRecordDao: TimerRecordDao,
 ) {
     fun getAllTimerRecords(): Flow<List<TimerRecord>> =
-        timerRecordDao.getAll().map { entities: List<TimerRecordEntity> ->
+        timerRecordDao.getAll().map { entities ->
             entities.map { entity -> entity.toDomainModel() }
         }
 

@@ -22,14 +22,15 @@ A simple, effective Pomodoro timer app for Android built with modern technologie
 
 ## 🛠️ Tech Stack
 
-- **Language:** Kotlin
-- **UI Framework:** Jetpack Compose
+- **Language:** Kotlin 1.9.22
+- **UI Framework:** Jetpack Compose 2024.02.00
 - **Architecture:** MVVM + Clean Architecture
-- **Dependency Injection:** Hilt
-- **Database:** Room (local) + Firestore (sync)
-- **Background Tasks:** WorkManager + Foreground Service
-- **Widgets:** Jetpack Glance
+- **Dependency Injection:** Hilt 2.48
+- **Database:** Room 2.6.1 (local) + Firestore (sync)
+- **Background Tasks:** WorkManager 2.9.0 + Foreground Service
+- **Widgets:** Jetpack Glance 1.0.0
 - **Design:** Material Design 3
+- **Testing:** JUnit 4, Mockito, Turbine, Truth
 
 ## 🚀 Getting Started
 
@@ -58,6 +59,19 @@ A simple, effective Pomodoro timer app for Android built with modern technologie
    ```bash
    ./gradlew clean build
    ```
+
+### Testing
+
+```bash
+# Run unit tests
+./gradlew test
+
+# Run integration tests
+./gradlew connectedAndroidTest
+
+# Run all tests
+./gradlew check
+```
 
 ### Firebase Setup (Optional)
 
@@ -89,14 +103,52 @@ app/src/main/java/com/smirnoffmg/pomodorotimer/
 ├── service/               # Background services
 │   └── timer/             # Timer foreground service
 ├── widget/                # Home screen widgets
-└── di/                    # Dependency injection modules
+├── di/                    # Dependency injection modules
+└── worker/                # WorkManager workers
+
+app/src/test/              # Unit tests
+├── java/com/smirnoffmg/pomodorotimer/
+│   ├── testing/           # Test infrastructure
+│   ├── presentation/      # ViewModel tests
+│   ├── domain/            # Use case tests
+│   ├── data/              # Repository tests
+│   └── di/                # Test modules
+
+app/src/androidTest/       # Integration tests
+├── java/com/smirnoffmg/pomodorotimer/
+│   ├── testing/           # Test runners
+│   └── presentation/      # UI tests
 ```
+
+## 🧪 Testing Strategy
+
+### Unit Tests
+- **Location**: `src/test/`
+- **Framework**: JUnit 4
+- **Mocking**: Mockito
+- **Coroutines**: Test dispatchers
+- **Database**: In-memory Room database
+
+### Integration Tests
+- **Location**: `src/androidTest/`
+- **Framework**: AndroidJUnit4
+- **Hilt**: Custom test runner
+- **Compose**: UI testing
+
+### Test Infrastructure
+- **BaseUnitTest**: Common test setup
+- **TestUtils**: Reusable test data
+- **TestDatabaseModule**: In-memory database for testing
+- **TestDispatchers**: Coroutine test utilities
 
 ## 🎯 Development Roadmap
 
 ### Phase 1: Core Timer System ✅
 
-- [ ] Project setup and dependencies
+- [x] Project setup and dependencies
+- [x] Clean Architecture implementation
+- [x] Comprehensive testing infrastructure
+- [x] Dependency injection setup
 - [ ] Foreground service timer
 - [ ] Basic Compose UI
 - [ ] Start/pause/stop functionality
@@ -129,9 +181,17 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 ### Development Guidelines
 
 - Follow [Android's coding standards](https://developer.android.com/kotlin/style-guide)
-- Write unit tests for new features
+- **Write tests for new features** (TDD approach)
 - Ensure UI follows Material Design 3 guidelines
 - Test on multiple Android versions (API 24+)
+- Follow SOLID, DRY, and KISS principles
+
+### Testing Requirements
+
+- **Unit tests** for all business logic
+- **Integration tests** for UI flows
+- **Test coverage** should be maintained above 80%
+- **Test naming** should follow Given-When-Then pattern
 
 ## 📄 License
 

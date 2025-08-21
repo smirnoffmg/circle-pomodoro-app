@@ -12,25 +12,45 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel for timer functionality following Single Responsibility Principle.
+ * Only handles timer-related UI state and user actions.
+ */
 @HiltViewModel
-class TimerViewModel
-    @Inject
-    constructor(
-        private val getTimerRecordsUseCase: GetTimerRecordsUseCase,
-        private val addTimerRecordUseCase: AddTimerRecordUseCase,
-    ) : ViewModel() {
-        val timerRecords: StateFlow<List<TimerRecord>> =
-            getTimerRecordsUseCase()
-                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+class TimerViewModel @Inject constructor(
+    private val getTimerRecordsUseCase: GetTimerRecordsUseCase,
+    private val addTimerRecordUseCase: AddTimerRecordUseCase,
+) : ViewModel() {
 
-        fun addTimerRecord(duration: Long) {
-            viewModelScope.launch {
-                addTimerRecordUseCase(
-                    TimerRecord(
-                        durationSeconds = (duration / 1000).toInt(),
-                        startTimestamp = System.currentTimeMillis(),
-                    ),
-                )
-            }
+    /**
+     * Timer records state following KISS principle with simple state management.
+     */
+    val timerRecords: StateFlow<List<TimerRecord>> =
+        getTimerRecordsUseCase()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
+
+    /**
+     * Adds a timer record following Single Responsibility Principle.
+     * Only handles the action of adding a record.
+     */
+    fun addTimerRecord(durationMillis: Long) {
+        viewModelScope.launch {
+            val timerRecord = createTimerRecord(durationMillis)
+            addTimerRecordUseCase(timerRecord)
         }
     }
+
+    /**
+     * Creates a timer record following DRY principle.
+     * Centralizes timer record creation logic.
+     */
+    private fun createTimerRecord(durationMillis: Long): TimerRecord =
+        TimerRecord(
+            durationSeconds = (durationMillis / 1000).toInt(),
+            startTimestamp = System.currentTimeMillis(),
+        )
+}
