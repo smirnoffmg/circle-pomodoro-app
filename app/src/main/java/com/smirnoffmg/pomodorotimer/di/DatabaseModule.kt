@@ -15,34 +15,64 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+/**
+ * Database module following Single Responsibility Principle.
+ * Only handles database-related dependencies.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+
+    private const val DATABASE_NAME = "pomodoro_database"
+
+    /**
+     * Provides Room database instance following KISS principle.
+     * Uses simple configuration with sensible defaults.
+     */
     @Provides
     @Singleton
     fun provideDatabase(
         @ApplicationContext context: Context,
-    ): PomodoroDatabase =
-        Room
-            .databaseBuilder(
-                context,
-                PomodoroDatabase::class.java,
-                "pomodoro_database",
-            ).build()
+    ): PomodoroDatabase = Room
+        .databaseBuilder(
+            context,
+            PomodoroDatabase::class.java,
+            DATABASE_NAME,
+        )
+        .build()
 
+    /**
+     * Provides PomodoroSessionDao following Single Responsibility Principle.
+     * Only handles session data access.
+     */
     @Provides
     @Singleton
-    fun providePomodoroSessionDao(database: PomodoroDatabase) = database.pomodoroSessionDao()
+    fun providePomodoroSessionDao(database: PomodoroDatabase): PomodoroSessionDao =
+        database.pomodoroSessionDao()
 
+    /**
+     * Provides TimerRecordDao following Single Responsibility Principle.
+     * Only handles timer record data access.
+     */
     @Provides
     @Singleton
-    fun provideTimerRecordDao(database: PomodoroDatabase) = database.timerRecordDao()
+    fun provideTimerRecordDao(database: PomodoroDatabase): TimerRecordDao =
+        database.timerRecordDao()
 
+    /**
+     * Provides TimerRepository following Dependency Inversion Principle.
+     * Depends on abstraction (TimerRecordDao) rather than concrete implementation.
+     */
     @Provides
     @Singleton
-    fun provideTimerRepository(dao: TimerRecordDao) = TimerRepository(dao)
+    fun provideTimerRepository(dao: TimerRecordDao): TimerRepository = TimerRepository(dao)
 
+    /**
+     * Provides PomodoroRepository following Dependency Inversion Principle.
+     * Depends on abstraction (PomodoroSessionDao) rather than concrete implementation.
+     */
     @Provides
     @Singleton
-    fun providePomodoroRepository(dao: PomodoroSessionDao): PomodoroRepository = PomodoroRepositoryImpl(dao)
+    fun providePomodoroRepository(dao: PomodoroSessionDao): PomodoroRepository =
+        PomodoroRepositoryImpl(dao)
 }
