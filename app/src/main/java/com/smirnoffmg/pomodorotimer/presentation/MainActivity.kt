@@ -26,5 +26,8 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         analyticsHelper.logScreenView("MainTimerScreen")
+        
+        // Force widget update to ensure correct layout
+        com.smirnoffmg.pomodorotimer.widget.CircleTimerWidget.updateAllWidgets(this)
     }
 }

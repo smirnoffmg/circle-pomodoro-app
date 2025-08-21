@@ -1,5 +1,6 @@
 package com.smirnoffmg.pomodorotimer.service
 
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -31,31 +32,47 @@ class TimerForegroundService : Service() {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "timer_channel"
         private const val CHANNEL_NAME = "Timer Service"
-        private const val WAKE_LOCK_TAG = "PomodoroTimer::WakeLock"
+        private const val WAKE_LOCK_TAG = "CircleTimer::WakeLock"
+        private const val ALARM_REQUEST_CODE = 1002
         
         const val ACTION_START_TIMER = "com.smirnoffmg.pomodorotimer.START_TIMER"
         const val ACTION_PAUSE_TIMER = "com.smirnoffmg.pomodorotimer.PAUSE_TIMER"
         const val ACTION_STOP_TIMER = "com.smirnoffmg.pomodorotimer.STOP_TIMER"
         const val ACTION_SET_DURATION = "com.smirnoffmg.pomodorotimer.SET_DURATION"
         const val EXTRA_DURATION = "extra_duration"
+        
+        // Circle concept: Default intervals for immediate value delivery
+        private const val DEFAULT_WORK_DURATION = 25 * 60L // 25 minutes
+        private const val DEFAULT_BREAK_DURATION = 5 * 60L // 5 minutes
+        private const val DEFAULT_LONG_BREAK_DURATION = 15 * 60L // 15 minutes
+        private const val SESSIONS_BEFORE_LONG_BREAK = 4
     }
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var timerJob: Job? = null
     private var wakeLock: PowerManager.WakeLock? = null
+    private var alarmManager: AlarmManager? = null
+    private var alarmPendingIntent: PendingIntent? = null
 
     private val _timerState = MutableStateFlow(TimerState.STOPPED)
     val timerState: StateFlow<TimerState> = _timerState.asStateFlow()
 
-    private val _remainingTime = MutableStateFlow(25 * 60L)
+    private val _remainingTime = MutableStateFlow(DEFAULT_WORK_DURATION)
     val remainingTime: StateFlow<Long> = _remainingTime.asStateFlow()
 
     private val _progress = MutableStateFlow(1f)
     val progress: StateFlow<Float> = _progress.asStateFlow()
 
-    private var initialDuration: Long = 25 * 60L
+    // Circle concept: Automatic cycle management
+    private var currentCycleType = CycleType.WORK
+    private var completedSessions = 0
+    private var initialDuration: Long = DEFAULT_WORK_DURATION
 
     private val binder = TimerBinder()
+
+    enum class CycleType {
+        WORK, BREAK, LONG_BREAK
+    }
 
     inner class TimerBinder : Binder() {
         fun getService(): TimerForegroundService = this@TimerForegroundService
@@ -65,6 +82,7 @@ class TimerForegroundService : Service() {
         super.onCreate()
         createNotificationChannel()
         acquireWakeLock()
+        alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -73,7 +91,7 @@ class TimerForegroundService : Service() {
             ACTION_PAUSE_TIMER -> pauseTimer()
             ACTION_STOP_TIMER -> stopTimer()
             ACTION_SET_DURATION -> {
-                val duration = intent?.getLongExtra(EXTRA_DURATION, 25 * 60L) ?: 25 * 60L
+                val duration = intent?.getLongExtra(EXTRA_DURATION, DEFAULT_WORK_DURATION) ?: DEFAULT_WORK_DURATION
                 setTimerDuration(duration)
             }
         }
@@ -85,6 +103,7 @@ class TimerForegroundService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         releaseWakeLock()
+        cancelAlarm()
         timerJob?.cancel()
     }
 
@@ -94,6 +113,7 @@ class TimerForegroundService : Service() {
         _timerState.value = TimerState.RUNNING
         startForeground(NOTIFICATION_ID, createNotification())
         startCountdown()
+        scheduleAlarmBackup()
     }
 
     fun pauseTimer() {
@@ -101,14 +121,15 @@ class TimerForegroundService : Service() {
         
         _timerState.value = TimerState.PAUSED
         timerJob?.cancel()
+        cancelAlarm()
         updateNotification()
     }
 
     fun stopTimer() {
         _timerState.value = TimerState.STOPPED
         timerJob?.cancel()
-        _remainingTime.value = initialDuration
-        _progress.value = 1f
+        cancelAlarm()
+        resetToWorkCycle()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -149,12 +170,100 @@ class TimerForegroundService : Service() {
     }
 
     private fun onTimerComplete() {
-        _timerState.value = TimerState.STOPPED
-        _remainingTime.value = 0
-        _progress.value = 0f
+        // Circle concept: Automatic cycle transitions
+        when (currentCycleType) {
+            CycleType.WORK -> {
+                completedSessions++
+                if (completedSessions % SESSIONS_BEFORE_LONG_BREAK == 0) {
+                    startLongBreak()
+                } else {
+                    startBreak()
+                }
+            }
+            CycleType.BREAK, CycleType.LONG_BREAK -> {
+                startWork()
+            }
+        }
+    }
+
+    private fun startWork() {
+        currentCycleType = CycleType.WORK
+        initialDuration = DEFAULT_WORK_DURATION
+        _remainingTime.value = initialDuration
+        _progress.value = 1f
+        _timerState.value = TimerState.RUNNING
         updateNotification()
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
+        scheduleAlarmBackup()
+        startCountdown()
+    }
+
+    private fun startBreak() {
+        currentCycleType = CycleType.BREAK
+        initialDuration = DEFAULT_BREAK_DURATION
+        _remainingTime.value = initialDuration
+        _progress.value = 1f
+        _timerState.value = TimerState.RUNNING
+        updateNotification()
+        scheduleAlarmBackup()
+        startCountdown()
+    }
+
+    private fun startLongBreak() {
+        currentCycleType = CycleType.LONG_BREAK
+        initialDuration = DEFAULT_LONG_BREAK_DURATION
+        _remainingTime.value = initialDuration
+        _progress.value = 1f
+        _timerState.value = TimerState.RUNNING
+        updateNotification()
+        scheduleAlarmBackup()
+        startCountdown()
+    }
+
+    private fun resetToWorkCycle() {
+        currentCycleType = CycleType.WORK
+        completedSessions = 0
+        initialDuration = DEFAULT_WORK_DURATION
+        _remainingTime.value = initialDuration
+        _progress.value = 1f
+    }
+
+    // Circle concept: AlarmManager backup for bulletproof reliability
+    private fun scheduleAlarmBackup() {
+        alarmManager?.let { alarm ->
+            val intent = Intent(this, TimerForegroundService::class.java).apply {
+                action = ACTION_STOP_TIMER
+            }
+            
+            alarmPendingIntent = PendingIntent.getService(
+                this,
+                ALARM_REQUEST_CODE,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val triggerTime = System.currentTimeMillis() + (_remainingTime.value * 1000)
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarm.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime,
+                    alarmPendingIntent!!
+                )
+            } else {
+                alarm.setExact(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime,
+                    alarmPendingIntent!!
+                )
+            }
+        }
+    }
+
+    private fun cancelAlarm() {
+        alarmPendingIntent?.let { pendingIntent ->
+            alarmManager?.cancel(pendingIntent)
+            alarmPendingIntent = null
+        }
     }
 
     private fun createNotificationChannel() {
@@ -164,7 +273,7 @@ class TimerForegroundService : Service() {
                 CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Timer service notification"
+                description = "Circle timer service notification"
                 setShowBadge(false)
             }
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -183,14 +292,19 @@ class TimerForegroundService : Service() {
         )
 
         val timeText = formatTime(_remainingTime.value)
+        val cycleText = when (currentCycleType) {
+            CycleType.WORK -> "Focus"
+            CycleType.BREAK -> "Break"
+            CycleType.LONG_BREAK -> "Long Break"
+        }
         val stateText = when (_timerState.value) {
-            TimerState.RUNNING -> "Focus Time"
+            TimerState.RUNNING -> cycleText
             TimerState.PAUSED -> "Paused"
-            TimerState.STOPPED -> "Timer Stopped"
+            TimerState.STOPPED -> "Stopped"
         }
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Pomodoro Timer")
+            .setContentTitle("Circle Timer")
             .setContentText("$timeText - $stateText")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
@@ -203,6 +317,13 @@ class TimerForegroundService : Service() {
     private fun updateNotification() {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NOTIFICATION_ID, createNotification())
+        
+        // Update widget (simplified)
+        com.smirnoffmg.pomodorotimer.widget.CircleTimerWidget.updateTimerDisplay(
+            this,
+            _remainingTime.value,
+            _timerState.value == TimerState.RUNNING
+        )
     }
 
     private fun acquireWakeLock() {
