@@ -14,8 +14,12 @@ import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import com.smirnoffmg.pomodorotimer.R
+import com.smirnoffmg.pomodorotimer.domain.model.SessionType
+import com.smirnoffmg.pomodorotimer.domain.usecase.StartSessionUseCase
+import com.smirnoffmg.pomodorotimer.domain.usecase.CompleteSessionUseCase
 import com.smirnoffmg.pomodorotimer.presentation.MainActivity
 import com.smirnoffmg.pomodorotimer.presentation.viewmodel.TimerState
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -27,6 +31,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class TimerForegroundService : Service() {
     companion object {
         private const val NOTIFICATION_ID = 1001
@@ -67,6 +72,17 @@ class TimerForegroundService : Service() {
     private var currentCycleType = CycleType.WORK
     private var completedSessions = 0
     private var initialDuration: Long = DEFAULT_WORK_DURATION
+
+    // Session tracking
+    private var activeSessionId: Long? = null
+    private var sessionStartTime: Long = 0L
+
+    // Session tracking dependencies
+    @Inject
+    lateinit var startSessionUseCase: StartSessionUseCase
+    
+    @Inject
+    lateinit var completeSessionUseCase: CompleteSessionUseCase
 
     private val binder = TimerBinder()
 
@@ -129,6 +145,12 @@ class TimerForegroundService : Service() {
         _timerState.value = TimerState.STOPPED
         timerJob?.cancel()
         cancelAlarm()
+        
+        // Cancel active session if stopped manually during work
+        if (currentCycleType == CycleType.WORK && activeSessionId != null) {
+            cancelActiveSession()
+        }
+        
         resetToWorkCycle()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -174,6 +196,8 @@ class TimerForegroundService : Service() {
         when (currentCycleType) {
             CycleType.WORK -> {
                 completedSessions++
+                // Notify that a work session was completed
+                notifySessionCompleted()
                 if (completedSessions % SESSIONS_BEFORE_LONG_BREAK == 0) {
                     startLongBreak()
                 } else {
@@ -186,12 +210,52 @@ class TimerForegroundService : Service() {
         }
     }
 
+    private fun createWorkSession() {
+        serviceScope.launch {
+            try {
+                val sessionId = startSessionUseCase(
+                    sessionType = SessionType.WORK,
+                    duration = initialDuration * 1000L // Convert seconds to milliseconds
+                )
+                activeSessionId = sessionId
+            } catch (e: Exception) {
+                // Log error but don't crash the service
+                activeSessionId = null
+            }
+        }
+    }
+
+    private fun cancelActiveSession() {
+        // For cancelled sessions, we could either delete them or mark them as incomplete
+        // For now, we'll just clear the reference - incomplete sessions remain in DB
+        activeSessionId = null
+    }
+
+    private fun notifySessionCompleted() {
+        // Complete the active work session
+        activeSessionId?.let { sessionId ->
+            serviceScope.launch {
+                try {
+                    completeSessionUseCase(sessionId)
+                    activeSessionId = null
+                } catch (e: Exception) {
+                    // Log error but don't crash the service
+                }
+            }
+        }
+    }
+
     private fun startWork() {
         currentCycleType = CycleType.WORK
         initialDuration = DEFAULT_WORK_DURATION
         _remainingTime.value = initialDuration
         _progress.value = 1f
         _timerState.value = TimerState.RUNNING
+        
+        // Create session record for work sessions
+        sessionStartTime = System.currentTimeMillis()
+        createWorkSession()
+        
         updateNotification()
         scheduleAlarmBackup()
         startCountdown()

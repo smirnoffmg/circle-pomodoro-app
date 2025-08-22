@@ -10,7 +10,20 @@ data class DailyStatistics(
     val totalWorkDuration: Long,
     val totalBreakDuration: Long,
     val completionRate: Float = if (totalSessions > 0) completedSessions.toFloat() / totalSessions else 0f
-)
+) {
+    companion object {
+        fun empty() = DailyStatistics(
+            date = System.currentTimeMillis(),
+            totalSessions = 0,
+            completedSessions = 0,
+            workSessions = 0,
+            shortBreakSessions = 0,
+            longBreakSessions = 0,
+            totalWorkDuration = 0L,
+            totalBreakDuration = 0L
+        )
+    }
+}
 
 data class WeeklyStatistics(
     val weekStart: Long,
