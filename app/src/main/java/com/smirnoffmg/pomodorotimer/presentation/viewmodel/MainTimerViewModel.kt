@@ -14,86 +14,112 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MainTimerViewModel @Inject constructor(
-    private val serviceManager: TimerServiceManager,
-    private val getDailyStatisticsUseCase: GetDailyStatisticsUseCase
-) : ViewModel() {
+class MainTimerViewModel
+    @Inject
+    constructor(
+        private val serviceManager: TimerServiceManager,
+        private val getDailyStatisticsUseCase: GetDailyStatisticsUseCase
+    ) : ViewModel() {
+        val timerState: StateFlow<TimerState> = serviceManager.timerState
+        val remainingTime: StateFlow<Long> = serviceManager.remainingTime
+        val progress: StateFlow<Float> = serviceManager.progress
+        val cycleType: StateFlow<TimerForegroundService.CycleType> = serviceManager.cycleType
 
-    val timerState: StateFlow<TimerState> = serviceManager.timerState
-    val remainingTime: StateFlow<Long> = serviceManager.remainingTime
-    val progress: StateFlow<Float> = serviceManager.progress
-    val cycleType: StateFlow<TimerForegroundService.CycleType> = serviceManager.cycleType
+        private val _dailyStatistics = MutableStateFlow(DailyStatistics.empty())
+        val dailyStatistics: StateFlow<DailyStatistics> = _dailyStatistics.asStateFlow()
 
-    private val _dailyStatistics = MutableStateFlow(DailyStatistics.empty())
-    val dailyStatistics: StateFlow<DailyStatistics> = _dailyStatistics.asStateFlow()
+        private val _showCelebration = MutableStateFlow(false)
+        val showCelebration: StateFlow<Boolean> = _showCelebration.asStateFlow()
 
-    private val _showCelebration = MutableStateFlow(false)
-    val showCelebration: StateFlow<Boolean> = _showCelebration.asStateFlow()
+        private val _showSettingsChangedMessage = MutableStateFlow(false)
+        val showSettingsChangedMessage: StateFlow<Boolean> = _showSettingsChangedMessage.asStateFlow()
 
-    init {
-        loadDailyStatistics()
-    }
-
-    fun startTimer() {
-        serviceManager.startTimer()
-    }
-
-    fun pauseTimer() {
-        serviceManager.pauseTimer()
-    }
-
-    fun stopTimer() {
-        serviceManager.stopTimer()
-    }
-
-    fun setTimerDuration(durationInSeconds: Long) {
-        serviceManager.setTimerDuration(durationInSeconds)
-    }
-
-    fun isServiceRunning(): Boolean = serviceManager.isServiceRunning()
-
-    fun loadDailyStatistics() {
-        viewModelScope.launch {
-            try {
-                val stats = getDailyStatisticsUseCase.getTodayStatistics()
-                _dailyStatistics.value = stats
-                checkForCelebration(stats)
-            } catch (e: Exception) {
-                // Handle error silently for now
-            }
+        init {
+            loadDailyStatistics()
         }
-    }
 
-    private fun checkForCelebration(stats: DailyStatistics) {
-        val dailyGoal = 8 // Default daily goal of 8 pomodoros
-        if (stats.workSessions >= dailyGoal && !_showCelebration.value) {
-            _showCelebration.value = true
-            // Auto-hide celebration after 3 seconds
+        fun startTimer() {
+            serviceManager.startTimer()
+        }
+
+        fun pauseTimer() {
+            serviceManager.pauseTimer()
+        }
+
+        fun stopTimer() {
+            serviceManager.stopTimer()
+        }
+
+        fun setTimerDuration(durationInSeconds: Long) {
+            serviceManager.setTimerDuration(durationInSeconds)
+        }
+
+        fun isServiceRunning(): Boolean = serviceManager.isServiceRunning()
+
+        fun loadDailyStatistics() {
             viewModelScope.launch {
-                kotlinx.coroutines.delay(3000)
-                _showCelebration.value = false
+                try {
+                    val stats = getDailyStatisticsUseCase.getTodayStatistics()
+                    _dailyStatistics.value = stats
+                    checkForCelebration(stats)
+                } catch (e: Exception) {
+                    // Handle error silently for now
+                }
             }
         }
-    }
 
-    fun dismissCelebration() {
-        _showCelebration.value = false
-    }
+        private fun checkForCelebration(stats: DailyStatistics) {
+            val dailyGoal = 8 // Default daily goal of 8 pomodoros
+            if (stats.workSessions >= dailyGoal && !_showCelebration.value) {
+                _showCelebration.value = true
+                // Auto-hide celebration after 3 seconds
+                viewModelScope.launch {
+                    kotlinx.coroutines.delay(3000)
+                    _showCelebration.value = false
+                }
+            }
+        }
 
-    fun skipBreak() {
-        serviceManager.skipBreak()
-    }
+        fun dismissCelebration() {
+            _showCelebration.value = false
+        }
 
-    fun isBreakSession(): Boolean {
-        return cycleType.value == TimerForegroundService.CycleType.BREAK || 
-               cycleType.value == TimerForegroundService.CycleType.LONG_BREAK
-    }
+        fun showSettingsChangedMessage() {
+            _showSettingsChangedMessage.value = true
+            // Auto-hide after 5 seconds
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(5000)
+                _showSettingsChangedMessage.value = false
+            }
+        }
 
-    override fun onCleared() {
-        super.onCleared()
-        serviceManager.cleanup()
+        fun dismissSettingsChangedMessage() {
+            _showSettingsChangedMessage.value = false
+        }
+
+        fun skipBreak() {
+            serviceManager.skipBreak()
+        }
+
+        fun isBreakSession(): Boolean =
+            cycleType.value == TimerForegroundService.CycleType.BREAK || 
+                cycleType.value == TimerForegroundService.CycleType.LONG_BREAK
+
+        fun reloadTimerSettings() {
+            // This will trigger the service to reload settings
+            serviceManager.reloadSettings()
+            
+            // Show message if timer is running (settings won't affect current session)
+            if (timerState.value == TimerState.RUNNING) {
+                showSettingsChangedMessage()
+            }
+        }
+
+        override fun onCleared() {
+            super.onCleared()
+            serviceManager.cleanup()
+        }
     }
-}
 
 enum class TimerState {
     RUNNING,

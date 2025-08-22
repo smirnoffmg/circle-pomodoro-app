@@ -17,7 +17,6 @@ import com.smirnoffmg.pomodorotimer.service.TimerForegroundService
  * Follows Circle concept: minimal, reliable, transparent.
  */
 class CircleTimerWidget : AppWidgetProvider() {
-
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
@@ -36,15 +35,17 @@ class CircleTimerWidget : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.widget_circle_timer)
 
         // Play/Pause button
-        val playPauseIntent = Intent(context, TimerForegroundService::class.java).apply {
-            action = TimerForegroundService.ACTION_START_TIMER
-        }
-        val playPausePendingIntent = PendingIntent.getService(
-            context,
-            0,
-            playPauseIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+        val playPauseIntent =
+            Intent(context, TimerForegroundService::class.java).apply {
+                action = TimerForegroundService.ACTION_START_TIMER
+            }
+        val playPausePendingIntent =
+            PendingIntent.getService(
+                context,
+                0,
+                playPauseIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
         views.setOnClickPendingIntent(R.id.widget_play_pause_button, playPausePendingIntent)
 
         // Update timer counter (placeholder - will be updated by service)
@@ -53,15 +54,19 @@ class CircleTimerWidget : AppWidgetProvider() {
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
-    override fun onReceive(context: Context, intent: Intent) {
+    override fun onReceive(
+        context: Context,
+        intent: Intent
+    ) {
         super.onReceive(context, intent)
         
         // Update all widgets when timer state changes
         if (intent.action == ACTION_TIMER_STATE_CHANGED) {
             val appWidgetManager = AppWidgetManager.getInstance(context)
-            val appWidgetIds = appWidgetManager.getAppWidgetIds(
-                ComponentName(context, CircleTimerWidget::class.java)
-            )
+            val appWidgetIds =
+                appWidgetManager.getAppWidgetIds(
+                    ComponentName(context, CircleTimerWidget::class.java)
+                )
             
             // Update all widgets
             appWidgetIds.forEach { appWidgetId ->
@@ -72,19 +77,25 @@ class CircleTimerWidget : AppWidgetProvider() {
 
     companion object {
         const val ACTION_TIMER_STATE_CHANGED = "com.smirnoffmg.pomodorotimer.TIMER_STATE_CHANGED"
-        
+
         fun updateAllWidgets(context: Context) {
-            val intent = Intent(context, CircleTimerWidget::class.java).apply {
-                action = ACTION_TIMER_STATE_CHANGED
-            }
+            val intent =
+                Intent(context, CircleTimerWidget::class.java).apply {
+                    action = ACTION_TIMER_STATE_CHANGED
+                }
             context.sendBroadcast(intent)
         }
 
-        fun updateTimerDisplay(context: Context, timeInSeconds: Long, isRunning: Boolean) {
+        fun updateTimerDisplay(
+            context: Context,
+            timeInSeconds: Long,
+            isRunning: Boolean
+        ) {
             val appWidgetManager = AppWidgetManager.getInstance(context)
-            val appWidgetIds = appWidgetManager.getAppWidgetIds(
-                ComponentName(context, CircleTimerWidget::class.java)
-            )
+            val appWidgetIds =
+                appWidgetManager.getAppWidgetIds(
+                    ComponentName(context, CircleTimerWidget::class.java)
+                )
             
             appWidgetIds.forEach { appWidgetId ->
                 val views = RemoteViews(context.packageName, R.layout.widget_circle_timer)
@@ -98,21 +109,24 @@ class CircleTimerWidget : AppWidgetProvider() {
                 views.setTextViewText(R.id.widget_play_pause_button, buttonText)
                 
                 // Update button action
-                val action = if (isRunning) {
-                    TimerForegroundService.ACTION_PAUSE_TIMER
-                } else {
-                    TimerForegroundService.ACTION_START_TIMER
-                }
+                val action =
+                    if (isRunning) {
+                        TimerForegroundService.ACTION_PAUSE_TIMER
+                    } else {
+                        TimerForegroundService.ACTION_START_TIMER
+                    }
                 
-                val playPauseIntent = Intent(context, TimerForegroundService::class.java).apply {
-                    this.action = action
-                }
-                val playPausePendingIntent = PendingIntent.getService(
-                    context,
-                    0,
-                    playPauseIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
+                val playPauseIntent =
+                    Intent(context, TimerForegroundService::class.java).apply {
+                        this.action = action
+                    }
+                val playPausePendingIntent =
+                    PendingIntent.getService(
+                        context,
+                        0,
+                        playPauseIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
                 views.setOnClickPendingIntent(R.id.widget_play_pause_button, playPausePendingIntent)
                 
                 appWidgetManager.updateAppWidget(appWidgetId, views)

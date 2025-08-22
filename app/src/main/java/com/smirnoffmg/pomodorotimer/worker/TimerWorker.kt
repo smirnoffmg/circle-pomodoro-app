@@ -16,35 +16,36 @@ import dagger.assisted.AssistedInject
  * Only handles periodic timer record creation.
  */
 @HiltWorker
-class TimerWorker @AssistedInject constructor(
-    @Assisted context: Context,
-    @Assisted workerParameters: WorkerParameters,
-    private val pomodoroRepository: PomodoroRepository,
-) : CoroutineWorker(context, workerParameters) {
-
-    companion object {
-        private const val DEFAULT_POMODORO_DURATION_MS = 25 * 60 * 1000L // 25 minutes
-    }
-
-    override suspend fun doWork(): ListenableWorker.Result =
-        try {
-            val session = createDefaultPomodoroSession()
-            pomodoroRepository.insertSession(session)
-            ListenableWorker.Result.success()
-        } catch (exception: Exception) {
-            ListenableWorker.Result.failure()
+class TimerWorker
+    @AssistedInject
+    constructor(
+        @Assisted context: Context,
+        @Assisted workerParameters: WorkerParameters,
+        private val pomodoroRepository: PomodoroRepository,
+    ) : CoroutineWorker(context, workerParameters) {
+        companion object {
+            private const val DEFAULT_POMODORO_DURATION_MS = 25 * 60 * 1000L // 25 minutes
         }
 
-    /**
-     * Creates a default Pomodoro session following KISS principle.
-     * Uses simple, hardcoded values for clarity.
-     */
-    private fun createDefaultPomodoroSession(): PomodoroSession =
-        PomodoroSession(
-            startTime = System.currentTimeMillis(),
-            endTime = null,
-            duration = DEFAULT_POMODORO_DURATION_MS,
-            isCompleted = false,
-            type = SessionType.WORK,
-        )
-}
+        override suspend fun doWork(): ListenableWorker.Result =
+            try {
+                val session = createDefaultPomodoroSession()
+                pomodoroRepository.insertSession(session)
+                ListenableWorker.Result.success()
+            } catch (exception: Exception) {
+                ListenableWorker.Result.failure()
+            }
+
+        /**
+         * Creates a default Pomodoro session following KISS principle.
+         * Uses simple, hardcoded values for clarity.
+         */
+        private fun createDefaultPomodoroSession(): PomodoroSession =
+            PomodoroSession(
+                startTime = System.currentTimeMillis(),
+                endTime = null,
+                duration = DEFAULT_POMODORO_DURATION_MS,
+                isCompleted = false,
+                type = SessionType.WORK,
+            )
+    }

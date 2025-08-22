@@ -10,7 +10,6 @@ import org.junit.Test
  * Tests core Circle concept features: reliability, simplicity, immediate value.
  */
 class CircleTimerTest {
-
     @Test
     fun `timer state transitions should work correctly`() {
         // Given
@@ -52,12 +51,13 @@ class CircleTimerTest {
     @Test
     fun `circle concept principles should be maintained`() {
         // Given
-        val principles = listOf(
-            "zero cognitive overhead",
-            "immediate value delivery", 
-            "single-focus design",
-            "bulletproof reliability"
-        )
+        val principles =
+            listOf(
+                "zero cognitive overhead",
+                "immediate value delivery", 
+                "single-focus design",
+                "bulletproof reliability"
+            )
 
         // Then
         assertThat(principles).hasSize(4)
@@ -71,11 +71,13 @@ class CircleTimerTest {
         return String.format("%02d:%02d", minutes, seconds)
     }
 
-    private fun calculateProgress(remaining: Long, total: Long): Float {
-        return if (total > 0) {
+    private fun calculateProgress(
+        remaining: Long,
+        total: Long
+    ): Float =
+        if (total > 0) {
             (remaining.toFloat() / total.toFloat()).coerceIn(0f, 1f)
         } else {
             0f
         }
-    }
 }

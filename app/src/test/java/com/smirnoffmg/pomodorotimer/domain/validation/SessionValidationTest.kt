@@ -7,7 +7,6 @@ import com.smirnoffmg.pomodorotimer.testing.BaseUnitTest
 import org.junit.Test
 
 class SessionValidationTest : BaseUnitTest() {
-
     @Test
     fun validSession_passesValidation() {
         val validSession = createValidSession()
@@ -77,10 +76,11 @@ class SessionValidationTest : BaseUnitTest() {
     fun sessionWithEndTimeBeforeStartTime_failsValidation() {
         val startTime = System.currentTimeMillis()
         val endTime = startTime - 1000L // 1 second before start
-        val session = createValidSession(
-            startTime = startTime,
-            endTime = endTime
-        )
+        val session =
+            createValidSession(
+                startTime = startTime,
+                endTime = endTime
+            )
         
         val result = SessionValidator.validate(session)
         
@@ -91,10 +91,11 @@ class SessionValidationTest : BaseUnitTest() {
 
     @Test
     fun completedSessionWithoutEndTime_failsValidation() {
-        val session = createValidSession(
-            isCompleted = true,
-            endTime = null
-        )
+        val session =
+            createValidSession(
+                isCompleted = true,
+                endTime = null
+            )
         
         val result = SessionValidator.validate(session)
         
@@ -109,12 +110,13 @@ class SessionValidationTest : BaseUnitTest() {
         val endTime = startTime + 30 * 60 * 1000L // 30 minutes actual
         val reportedDuration = 25 * 60 * 1000L // 25 minutes reported
         
-        val session = createValidSession(
-            startTime = startTime,
-            endTime = endTime,
-            duration = reportedDuration,
-            isCompleted = true
-        )
+        val session =
+            createValidSession(
+                startTime = startTime,
+                endTime = endTime,
+                duration = reportedDuration,
+                isCompleted = true
+            )
         
         val result = SessionValidator.validate(session)
         
@@ -129,12 +131,13 @@ class SessionValidationTest : BaseUnitTest() {
         val duration = 25 * 60 * 1000L // 25 minutes
         val endTime = startTime + duration
         
-        val session = createValidSession(
-            startTime = startTime,
-            endTime = endTime,
-            duration = duration,
-            isCompleted = true
-        )
+        val session =
+            createValidSession(
+                startTime = startTime,
+                endTime = endTime,
+                duration = duration,
+                isCompleted = true
+            )
         
         val result = SessionValidator.validate(session)
         
@@ -241,10 +244,11 @@ class SessionValidationTest : BaseUnitTest() {
 
     @Test
     fun validationResult_getErrorMessages_returnsMessagesForInvalid() {
-        val errors = listOf(
-            ValidationError.InvalidDuration,
-            ValidationError.SessionTooShort
-        )
+        val errors =
+            listOf(
+                ValidationError.InvalidDuration,
+                ValidationError.SessionTooShort
+            )
         val result = ValidationResult.Invalid(errors)
         
         val messages = result.getErrorMessages()

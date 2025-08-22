@@ -10,20 +10,20 @@ import org.junit.Test
  * Tests essential worker functionality without complex mocking.
  */
 class TimerWorkerTest {
-
     @Test
     fun `worker should create pomodoro session with correct duration`() {
         // Given
         val expectedDurationMs = 25 * 60 * 1000L // 25 minutes
 
         // When
-        val session = PomodoroSession(
-            duration = expectedDurationMs,
-            startTime = System.currentTimeMillis(),
-            endTime = null,
-            isCompleted = false,
-            type = SessionType.WORK
-        )
+        val session =
+            PomodoroSession(
+                duration = expectedDurationMs,
+                startTime = System.currentTimeMillis(),
+                endTime = null,
+                isCompleted = false,
+                type = SessionType.WORK
+            )
 
         // Then
         assertThat(session.duration).isEqualTo(25 * 60 * 1000L) // 25 minutes in milliseconds
@@ -48,13 +48,14 @@ class TimerWorkerTest {
         val beforeTimestamp = System.currentTimeMillis()
 
         // When
-        val session = PomodoroSession(
-            duration = 25 * 60 * 1000L,
-            startTime = System.currentTimeMillis(),
-            endTime = null,
-            isCompleted = false,
-            type = SessionType.WORK
-        )
+        val session =
+            PomodoroSession(
+                duration = 25 * 60 * 1000L,
+                startTime = System.currentTimeMillis(),
+                endTime = null,
+                isCompleted = false,
+                type = SessionType.WORK
+            )
         val afterTimestamp = System.currentTimeMillis()
 
         // Then

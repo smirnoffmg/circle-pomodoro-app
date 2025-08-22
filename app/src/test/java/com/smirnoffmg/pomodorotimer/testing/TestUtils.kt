@@ -14,7 +14,6 @@ import kotlinx.coroutines.test.setMain
  * Provides common testing functionality to avoid code duplication.
  */
 object TestUtils {
-    
     /**
      * Creates a test PomodoroSession with default values.
      * Follows KISS principle by providing sensible defaults.
@@ -28,16 +27,17 @@ object TestUtils {
         type: SessionType = SessionType.WORK,
         createdAt: Long = System.currentTimeMillis(),
         updatedAt: Long = System.currentTimeMillis()
-    ): PomodoroSession = PomodoroSession(
-        id = id,
-        startTime = startTime,
-        endTime = endTime,
-        duration = duration,
-        isCompleted = isCompleted,
-        type = type,
-        createdAt = createdAt,
-        updatedAt = updatedAt
-    )
+    ): PomodoroSession =
+        PomodoroSession(
+            id = id,
+            startTime = startTime,
+            endTime = endTime,
+            duration = duration,
+            isCompleted = isCompleted,
+            type = type,
+            createdAt = createdAt,
+            updatedAt = updatedAt
+        )
 
     /**
      * Creates a list of test PomodoroSessions.

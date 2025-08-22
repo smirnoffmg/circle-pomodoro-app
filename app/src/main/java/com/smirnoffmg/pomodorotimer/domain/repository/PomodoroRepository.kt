@@ -36,25 +36,49 @@ interface PomodoroRepository {
     suspend fun getDailyStatistics(date: Long): DailyStatistics
 
     // Weekly aggregation  
-    suspend fun getSessionsByWeek(weekStart: Long, weekEnd: Long): List<PomodoroSession>
+    suspend fun getSessionsByWeek(
+        weekStart: Long,
+        weekEnd: Long
+    ): List<PomodoroSession>
 
-    fun getSessionsByWeekFlow(weekStart: Long, weekEnd: Long): Flow<List<PomodoroSession>>
+    fun getSessionsByWeekFlow(
+        weekStart: Long,
+        weekEnd: Long
+    ): Flow<List<PomodoroSession>>
 
-    suspend fun getWeeklyStatistics(weekStart: Long, weekEnd: Long): WeeklyStatistics
+    suspend fun getWeeklyStatistics(
+        weekStart: Long,
+        weekEnd: Long
+    ): WeeklyStatistics
 
     // Monthly aggregation
-    suspend fun getSessionsByMonth(monthStart: Long, monthEnd: Long): List<PomodoroSession>
+    suspend fun getSessionsByMonth(
+        monthStart: Long,
+        monthEnd: Long
+    ): List<PomodoroSession>
 
-    fun getSessionsByMonthFlow(monthStart: Long, monthEnd: Long): Flow<List<PomodoroSession>>
+    fun getSessionsByMonthFlow(
+        monthStart: Long,
+        monthEnd: Long
+    ): Flow<List<PomodoroSession>>
 
-    suspend fun getMonthlyStatistics(monthStart: Long, monthEnd: Long): MonthlyStatistics
+    suspend fun getMonthlyStatistics(
+        monthStart: Long,
+        monthEnd: Long
+    ): MonthlyStatistics
 
     // Statistics and analytics
-    suspend fun getSessionTypeStatistics(fromDate: Long, sessionType: SessionType): SessionTypeStatistics
+    suspend fun getSessionTypeStatistics(
+        fromDate: Long,
+        sessionType: SessionType
+    ): SessionTypeStatistics
 
     suspend fun getTotalCompletedSessionsCount(fromDate: Long): Int
 
-    suspend fun getAverageDurationByType(sessionType: SessionType, fromDate: Long): Double
+    suspend fun getAverageDurationByType(
+        sessionType: SessionType,
+        fromDate: Long
+    ): Double
 
     // Data management
     suspend fun deleteSessionsBeforeDate(beforeDate: Long)

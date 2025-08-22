@@ -51,7 +51,10 @@ interface PomodoroSessionDao {
         AND isCompleted = 1
         AND type = :sessionType
     """)
-    suspend fun getCompletedSessionsCountByDateAndType(date: Long, sessionType: String): Int
+    suspend fun getCompletedSessionsCountByDateAndType(
+        date: Long,
+        sessionType: String
+    ): Int
 
     @Query("""
         SELECT SUM(duration) FROM pomodoro_sessions 
@@ -59,7 +62,10 @@ interface PomodoroSessionDao {
         AND isCompleted = 1
         AND type = :sessionType
     """)
-    suspend fun getTotalDurationByDateAndType(date: Long, sessionType: String): Long?
+    suspend fun getTotalDurationByDateAndType(
+        date: Long,
+        sessionType: String
+    ): Long?
 
     // Weekly aggregation queries
     @Query("""
@@ -67,14 +73,20 @@ interface PomodoroSessionDao {
         WHERE startTime >= :weekStart AND startTime < :weekEnd
         ORDER BY startTime ASC
     """)
-    suspend fun getSessionsByWeek(weekStart: Long, weekEnd: Long): List<PomodoroSessionEntity>
+    suspend fun getSessionsByWeek(
+        weekStart: Long,
+        weekEnd: Long
+    ): List<PomodoroSessionEntity>
 
     @Query("""
         SELECT * FROM pomodoro_sessions 
         WHERE startTime >= :weekStart AND startTime < :weekEnd
         ORDER BY startTime ASC
     """)
-    fun getSessionsByWeekFlow(weekStart: Long, weekEnd: Long): Flow<List<PomodoroSessionEntity>>
+    fun getSessionsByWeekFlow(
+        weekStart: Long,
+        weekEnd: Long
+    ): Flow<List<PomodoroSessionEntity>>
 
     @Query("""
         SELECT COUNT(*) FROM pomodoro_sessions 
@@ -83,8 +95,8 @@ interface PomodoroSessionDao {
         AND type = :sessionType
     """)
     suspend fun getCompletedSessionsCountByWeekAndType(
-        weekStart: Long, 
-        weekEnd: Long, 
+        weekStart: Long,
+        weekEnd: Long,
         sessionType: String
     ): Int
 
@@ -95,8 +107,8 @@ interface PomodoroSessionDao {
         AND type = :sessionType
     """)
     suspend fun getTotalDurationByWeekAndType(
-        weekStart: Long, 
-        weekEnd: Long, 
+        weekStart: Long,
+        weekEnd: Long,
         sessionType: String
     ): Long?
 
@@ -106,14 +118,20 @@ interface PomodoroSessionDao {
         WHERE startTime >= :monthStart AND startTime < :monthEnd
         ORDER BY startTime ASC
     """)
-    suspend fun getSessionsByMonth(monthStart: Long, monthEnd: Long): List<PomodoroSessionEntity>
+    suspend fun getSessionsByMonth(
+        monthStart: Long,
+        monthEnd: Long
+    ): List<PomodoroSessionEntity>
 
     @Query("""
         SELECT * FROM pomodoro_sessions 
         WHERE startTime >= :monthStart AND startTime < :monthEnd
         ORDER BY startTime ASC
     """)
-    fun getSessionsByMonthFlow(monthStart: Long, monthEnd: Long): Flow<List<PomodoroSessionEntity>>
+    fun getSessionsByMonthFlow(
+        monthStart: Long,
+        monthEnd: Long
+    ): Flow<List<PomodoroSessionEntity>>
 
     // Statistics queries
     @Query("""
@@ -122,7 +140,10 @@ interface PomodoroSessionDao {
         AND type = :sessionType
         AND startTime >= :fromDate
     """)
-    suspend fun getAverageDurationByType(sessionType: String, fromDate: Long): Double?
+    suspend fun getAverageDurationByType(
+        sessionType: String,
+        fromDate: Long
+    ): Double?
 
     @Query("""
         SELECT COUNT(*) FROM pomodoro_sessions 

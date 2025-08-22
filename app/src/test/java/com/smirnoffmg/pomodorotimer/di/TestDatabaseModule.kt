@@ -23,7 +23,6 @@ import javax.inject.Singleton
     replaces = [DatabaseModule::class]
 )
 object TestDatabaseModule {
-
     private const val TEST_DATABASE_NAME = "test_pomodoro_database"
 
     /**
@@ -32,27 +31,25 @@ object TestDatabaseModule {
      */
     @Provides
     @Singleton
-    fun provideTestDatabase(): PomodoroDatabase = Room
-        .inMemoryDatabaseBuilder(
-            ApplicationProvider.getApplicationContext<Context>(),
-            PomodoroDatabase::class.java
-        )
-        .allowMainThreadQueries() // Allow main thread queries for testing
-        .build()
+    fun provideTestDatabase(): PomodoroDatabase =
+        Room
+            .inMemoryDatabaseBuilder(
+                ApplicationProvider.getApplicationContext<Context>(),
+                PomodoroDatabase::class.java
+            ).allowMainThreadQueries() // Allow main thread queries for testing
+            .build()
 
     /**
      * Provides test PomodoroSessionDao following Single Responsibility Principle.
      */
     @Provides
     @Singleton
-    fun provideTestPomodoroSessionDao(database: PomodoroDatabase): PomodoroSessionDao =
-        database.pomodoroSessionDao()
+    fun provideTestPomodoroSessionDao(database: PomodoroDatabase): PomodoroSessionDao = database.pomodoroSessionDao()
 
     /**
      * Provides test PomodoroRepository following Dependency Inversion Principle.
      */
     @Provides
     @Singleton
-    fun provideTestPomodoroRepository(dao: PomodoroSessionDao): PomodoroRepository =
-        PomodoroRepositoryImpl(dao)
+    fun provideTestPomodoroRepository(dao: PomodoroSessionDao): PomodoroRepository = PomodoroRepositoryImpl(dao)
 }

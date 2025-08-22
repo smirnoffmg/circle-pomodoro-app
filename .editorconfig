@@ -1,0 +1,77 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Kotlin files
+[*.{kt,kts}]
+# ktlint specific settings
+ktlint_code_style = ktlint_official
+ktlint_ignore_back_ticked_identifier = false
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_filename = disabled
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled
+ktlint_standard_multiline-if-else = disabled
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_filename = disabled
+ktlint_standard_annotation-spacing = disabled
+ktlint_standard_argument-list-wrapping = disabled
+ktlint_standard_double-colon-spacing = disabled
+ktlint_standard_enum-entry-name-case = disabled
+ktlint_standard_function-naming = disabled
+ktlint_standard_if-else-bracing = disabled
+ktlint_standard_import-ordering = disabled
+ktlint_standard_kdoc-wrapping = disabled
+ktlint_standard_modifier-order = disabled
+ktlint_standard_no-line-break-after-else = disabled
+ktlint_standard_no-line-break-before-assignment = disabled
+ktlint_standard_no-multi-spaces = disabled
+ktlint_standard_no-single-line-block-comments = disabled
+ktlint_standard_no-trailing-spaces = disabled
+ktlint_standard_no-unit-return = disabled
+ktlint_standard_no-unused-imports = disabled
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_parameter-list-wrapping = disabled
+ktlint_standard_spacing-around-dot = disabled
+ktlint_standard_spacing-around-keyword = disabled
+ktlint_standard_spacing-around-operators = disabled
+ktlint_standard_string-parameter-wrapping = disabled
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled
+ktlint_standard_wrapping = disabled
+
+# Indent with 4 spaces
+indent_style = space
+indent_size = 4
+
+# Markdown files
+[*.md]
+trim_trailing_whitespace = false
+
+# YAML files
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# JSON files
+[*.json]
+indent_style = space
+indent_size = 2
+
+# XML files
+[*.xml]
+indent_style = space
+indent_size = 2
+
+# Properties files
+[*.properties]
+indent_style = space
+indent_size = 2

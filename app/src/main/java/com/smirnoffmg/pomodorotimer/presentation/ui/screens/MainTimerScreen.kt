@@ -21,9 +21,15 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -60,6 +66,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun MainTimerScreen(
     modifier: Modifier = Modifier,
+    onNavigateToSettings: () -> Unit = {},
     viewModel: MainTimerViewModel = hiltViewModel()
 ) {
     val timerState by viewModel.timerState.collectAsState()
@@ -67,6 +74,7 @@ fun MainTimerScreen(
     val progress by viewModel.progress.collectAsState()
     val dailyStatistics by viewModel.dailyStatistics.collectAsState()
     val showCelebration by viewModel.showCelebration.collectAsState()
+    val showSettingsChangedMessage by viewModel.showSettingsChangedMessage.collectAsState()
     
     val cycleType by viewModel.cycleType.collectAsState()
     val isBreakSession = viewModel.isBreakSession()
@@ -82,10 +90,29 @@ fun MainTimerScreen(
             // Daily Session Counter (top of screen)
             DailySessionCounter(
                 dailyStatistics = dailyStatistics,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 32.dp)
+                modifier =
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 32.dp, start = 80.dp, end = 80.dp)
             )
+
+            // Settings button (top-right corner with proper spacing)
+            FloatingActionButton(
+                onClick = onNavigateToSettings,
+                modifier =
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 32.dp, end = 16.dp)
+                        .testTag("settings_button"),
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
 
             // Primary Circular Timer Display with Subtle Feedback
             CircularTimerDisplay(
@@ -107,15 +134,23 @@ fun MainTimerScreen(
                 isBreakSession = isBreakSession,
                 onStopClick = { viewModel.stopTimer() },
                 onSkipBreakClick = { viewModel.skipBreak() },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 48.dp)
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 48.dp)
             )
 
             // Celebration Overlay
             if (showCelebration) {
                 CelebrationOverlay(
                     onDismiss = { viewModel.dismissCelebration() }
+                )
+            }
+
+            // Settings Changed Message
+            if (showSettingsChangedMessage) {
+                SettingsChangedMessage(
+                    onDismiss = { viewModel.dismissSettingsChangedMessage() }
                 )
             }
         }
@@ -139,9 +174,10 @@ private fun CircularTimerDisplay(
     val isPressed by interactionSource.collectIsPressedAsState()
     
     Box(
-        modifier = modifier
-            .size(320.dp)
-            .testTag("circular_timer_display"),
+        modifier =
+            modifier
+                .size(320.dp)
+                .testTag("circular_timer_display"),
         contentAlignment = Alignment.Center
     ) {
         val animatedProgress by animateFloatAsState(
@@ -153,10 +189,11 @@ private fun CircularTimerDisplay(
         // Large Circular Progress Indicator with Subtle Visual Feedback
         CircularProgressIndicator(
             progress = { animatedProgress },
-            modifier = Modifier
-                .size(320.dp)
-                .scale(if (isPressed) 0.98f else 1f)
-                .testTag("timer_progress"),
+            modifier =
+                Modifier
+                    .size(320.dp)
+                    .scale(if (isPressed) 0.98f else 1f)
+                    .testTag("timer_progress"),
             strokeWidth = 16.dp,
             strokeCap = StrokeCap.Round,
             color = getTimerColor(timerState, cycleType),
@@ -170,9 +207,10 @@ private fun CircularTimerDisplay(
         ) {
             Text(
                 text = formatTime(remainingTime),
-                style = MaterialTheme.typography.displayLarge.copy(
-                    fontWeight = FontWeight.Light
-                ),
+                style =
+                    MaterialTheme.typography.displayLarge.copy(
+                        fontWeight = FontWeight.Light
+                    ),
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
@@ -189,20 +227,22 @@ private fun CircularTimerDisplay(
 
         // Clickable Area with Subtle Visual Feedback
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null // No ripple for clean aesthetic
-                ) { onTimerClick() }
-                .testTag("timer_click_area"),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = null // No ripple for clean aesthetic
+                    ) { onTimerClick() }
+                    .testTag("timer_click_area"),
             contentAlignment = Alignment.Center
         ) {
             // Invisible clickable area
             Box(
-                modifier = Modifier
-                    .size(280.dp)
-                    .testTag("timer_click_target")
+                modifier =
+                    Modifier
+                        .size(280.dp)
+                        .testTag("timer_click_target")
             )
         }
     }
@@ -222,18 +262,20 @@ private fun DailySessionCounter(
     val progress = (completedSessions.toFloat() / dailyGoal).coerceIn(0f, 1f)
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .testTag("daily_session_counter"),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .testTag("daily_session_counter"),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Session counter text
         Text(
             text = "$completedSessions/$dailyGoal",
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-            ),
+            style =
+                MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                ),
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
         )
@@ -243,10 +285,11 @@ private fun DailySessionCounter(
         // Progress indicator
         LinearProgressIndicator(
             progress = { progress },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(8.dp)
-                .testTag("daily_progress_indicator"),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .testTag("daily_progress_indicator"),
             color = MaterialTheme.colorScheme.primary,
             trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         )
@@ -364,31 +407,35 @@ private fun CelebrationOverlay(
     val scale by infiniteTransition.animateFloat(
         initialValue = 1f,
         targetValue = 1.2f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(500),
-            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
-        ),
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(500),
+                repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+            ),
         label = "celebration_scale"
     )
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .testTag("celebration_overlay"),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .testTag("celebration_overlay"),
         contentAlignment = Alignment.Center
     ) {
         // Semi-transparent background
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable { onDismiss() }
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .clickable { onDismiss() }
         )
 
         // Celebration content
         Column(
-            modifier = Modifier
-                .scale(scale)
-                .testTag("celebration_content"),
+            modifier =
+                Modifier
+                    .scale(scale)
+                    .testTag("celebration_content"),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
@@ -402,9 +449,10 @@ private fun CelebrationOverlay(
 
             Text(
                 text = "🎉 Daily Goal Achieved! 🎉",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.Bold
-                ),
+                style =
+                    MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center
             )
@@ -432,7 +480,8 @@ private fun getTimerColor(
 ) = when {
     timerState == TimerState.RUNNING && cycleType == TimerForegroundService.CycleType.WORK -> 
         MaterialTheme.colorScheme.primary
-    timerState == TimerState.RUNNING && (cycleType == TimerForegroundService.CycleType.BREAK || cycleType == TimerForegroundService.CycleType.LONG_BREAK) -> 
+    timerState == TimerState.RUNNING &&
+        (cycleType == TimerForegroundService.CycleType.BREAK || cycleType == TimerForegroundService.CycleType.LONG_BREAK) -> 
         MaterialTheme.colorScheme.secondary
     timerState == TimerState.PAUSED -> 
         MaterialTheme.colorScheme.secondary
@@ -450,13 +499,70 @@ private fun formatTime(timeInSeconds: Long): String {
 }
 
 /**
+ * Settings changed message overlay - informs user that settings won't affect current timer.
+ */
+@Composable
+private fun SettingsChangedMessage(
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .testTag("settings_changed_message"),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+    ) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Info",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                
+                Text(
+                    text = "Settings updated. New timers will use these settings.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            IconButton(onClick = onDismiss) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Dismiss",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+/**
  * Get timer state text - minimal, clear indication.
  */
-private fun getTimerStateText(timerState: TimerState): String = when (timerState) {
-    TimerState.RUNNING -> "Focus"
-    TimerState.PAUSED -> "Paused"
-    TimerState.STOPPED -> "Ready"
-}
+private fun getTimerStateText(timerState: TimerState): String =
+    when (timerState) {
+        TimerState.RUNNING -> "Focus"
+        TimerState.PAUSED -> "Paused"
+        TimerState.STOPPED -> "Ready"
+    }
 
 @Preview(showBackground = true)
 @Composable

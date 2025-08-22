@@ -8,7 +8,6 @@ import org.junit.Test
  * Following KISS principle for testing.
  */
 class SimpleTest {
-
     @Test
     fun `basic test should pass`() {
         // Given - Simple test setup

@@ -17,42 +17,44 @@ import javax.inject.Inject
  * Only handles timer-related UI state and user actions.
  */
 @HiltViewModel
-class TimerViewModel @Inject constructor(
-    private val pomodoroRepository: PomodoroRepository,
-) : ViewModel() {
+class TimerViewModel
+    @Inject
+    constructor(
+        private val pomodoroRepository: PomodoroRepository,
+    ) : ViewModel() {
+        /**
+         * Pomodoro sessions state following KISS principle with simple state management.
+         */
+        val pomodoroSessions: StateFlow<List<PomodoroSession>> =
+            pomodoroRepository
+                .getAllSessions()
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = emptyList()
+                )
 
-    /**
-     * Pomodoro sessions state following KISS principle with simple state management.
-     */
-    val pomodoroSessions: StateFlow<List<PomodoroSession>> =
-        pomodoroRepository.getAllSessions()
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = emptyList()
-            )
-
-    /**
-     * Adds a Pomodoro session following Single Responsibility Principle.
-     * Only handles the action of adding a session.
-     */
-    fun addPomodoroSession(durationMillis: Long) {
-        viewModelScope.launch {
-            val session = createPomodoroSession(durationMillis)
-            pomodoroRepository.insertSession(session)
+        /**
+         * Adds a Pomodoro session following Single Responsibility Principle.
+         * Only handles the action of adding a session.
+         */
+        fun addPomodoroSession(durationMillis: Long) {
+            viewModelScope.launch {
+                val session = createPomodoroSession(durationMillis)
+                pomodoroRepository.insertSession(session)
+            }
         }
-    }
 
-    /**
-     * Creates a Pomodoro session following DRY principle.
-     * Centralizes session creation logic.
-     */
-    private fun createPomodoroSession(durationMillis: Long): PomodoroSession =
-        PomodoroSession(
-            startTime = System.currentTimeMillis(),
-            endTime = null,
-            duration = durationMillis,
-            isCompleted = false,
-            type = SessionType.WORK,
-        )
-}
+        /**
+         * Creates a Pomodoro session following DRY principle.
+         * Centralizes session creation logic.
+         */
+        private fun createPomodoroSession(durationMillis: Long): PomodoroSession =
+            PomodoroSession(
+                startTime = System.currentTimeMillis(),
+                endTime = null,
+                duration = durationMillis,
+                isCompleted = false,
+                type = SessionType.WORK,
+            )
+    }

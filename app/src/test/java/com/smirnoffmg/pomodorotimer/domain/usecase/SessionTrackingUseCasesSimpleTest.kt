@@ -15,7 +15,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 class SessionTrackingUseCasesSimpleTest : BaseUnitTest() {
-
     @Mock
     private lateinit var mockRepository: PomodoroRepository
     
@@ -33,73 +32,79 @@ class SessionTrackingUseCasesSimpleTest : BaseUnitTest() {
     }
 
     @Test
-    fun startSessionUseCase_callsRepositoryInsert() = runTest {
-        val sessionType = SessionType.WORK
-        val duration = 25 * 60 * 1000L
-        val expectedId = 123L
-        whenever(mockRepository.insertSession(any())).thenReturn(expectedId)
+    fun startSessionUseCase_callsRepositoryInsert() =
+        runTest {
+            val sessionType = SessionType.WORK
+            val duration = 25 * 60 * 1000L
+            val expectedId = 123L
+            whenever(mockRepository.insertSession(any())).thenReturn(expectedId)
         
-        val result = startSessionUseCase(sessionType, duration)
+            val result = startSessionUseCase(sessionType, duration)
         
-        assertThat(result).isEqualTo(expectedId)
-        verify(mockRepository).insertSession(any())
-    }
+            assertThat(result).isEqualTo(expectedId)
+            verify(mockRepository).insertSession(any())
+        }
 
     @Test
-    fun completeSessionUseCase_successWithValidSession() = runTest {
-        val sessionId = 1L
-        val session = createTestSession(id = sessionId, isCompleted = false)
-        whenever(mockRepository.getSessionById(sessionId)).thenReturn(session)
+    fun completeSessionUseCase_successWithValidSession() =
+        runTest {
+            val sessionId = 1L
+            val session = createTestSession(id = sessionId, isCompleted = false)
+            whenever(mockRepository.getSessionById(sessionId)).thenReturn(session)
         
-        val result = completeSessionUseCase(sessionId)
+            val result = completeSessionUseCase(sessionId)
         
-        assertThat(result.isSuccess).isTrue()
-        verify(mockRepository).updateSessionCompletion(any(), any(), any())
-    }
+            assertThat(result.isSuccess).isTrue()
+            verify(mockRepository).updateSessionCompletion(any(), any(), any())
+        }
 
     @Test
-    fun completeSessionUseCase_failsWhenSessionNotFound() = runTest {
-        val sessionId = 1L
-        whenever(mockRepository.getSessionById(sessionId)).thenReturn(null)
+    fun completeSessionUseCase_failsWhenSessionNotFound() =
+        runTest {
+            val sessionId = 1L
+            whenever(mockRepository.getSessionById(sessionId)).thenReturn(null)
         
-        val result = completeSessionUseCase(sessionId)
+            val result = completeSessionUseCase(sessionId)
         
-        assertThat(result.isFailure).isTrue()
-    }
+            assertThat(result.isFailure).isTrue()
+        }
 
     @Test
-    fun completeSessionUseCase_failsWhenSessionAlreadyCompleted() = runTest {
-        val sessionId = 1L
-        val session = createTestSession(id = sessionId, isCompleted = true)
-        whenever(mockRepository.getSessionById(sessionId)).thenReturn(session)
+    fun completeSessionUseCase_failsWhenSessionAlreadyCompleted() =
+        runTest {
+            val sessionId = 1L
+            val session = createTestSession(id = sessionId, isCompleted = true)
+            whenever(mockRepository.getSessionById(sessionId)).thenReturn(session)
         
-        val result = completeSessionUseCase(sessionId)
+            val result = completeSessionUseCase(sessionId)
         
-        assertThat(result.isFailure).isTrue()
-    }
+            assertThat(result.isFailure).isTrue()
+        }
 
     @Test
-    fun cancelSessionUseCase_successWithIncompleteSession() = runTest {
-        val sessionId = 1L
-        val session = createTestSession(id = sessionId, isCompleted = false)
-        whenever(mockRepository.getSessionById(sessionId)).thenReturn(session)
+    fun cancelSessionUseCase_successWithIncompleteSession() =
+        runTest {
+            val sessionId = 1L
+            val session = createTestSession(id = sessionId, isCompleted = false)
+            whenever(mockRepository.getSessionById(sessionId)).thenReturn(session)
         
-        val result = cancelSessionUseCase(sessionId)
+            val result = cancelSessionUseCase(sessionId)
         
-        assertThat(result.isSuccess).isTrue()
-        verify(mockRepository).deleteSession(sessionId)
-    }
+            assertThat(result.isSuccess).isTrue()
+            verify(mockRepository).deleteSession(sessionId)
+        }
 
     @Test
-    fun cancelSessionUseCase_failsWithCompletedSession() = runTest {
-        val sessionId = 1L
-        val session = createTestSession(id = sessionId, isCompleted = true)
-        whenever(mockRepository.getSessionById(sessionId)).thenReturn(session)
+    fun cancelSessionUseCase_failsWithCompletedSession() =
+        runTest {
+            val sessionId = 1L
+            val session = createTestSession(id = sessionId, isCompleted = true)
+            whenever(mockRepository.getSessionById(sessionId)).thenReturn(session)
         
-        val result = cancelSessionUseCase(sessionId)
+            val result = cancelSessionUseCase(sessionId)
         
-        assertThat(result.isFailure).isTrue()
-    }
+            assertThat(result.isFailure).isTrue()
+        }
 
     private fun createTestSession(
         id: Long = 1L,

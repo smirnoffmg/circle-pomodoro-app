@@ -14,12 +14,11 @@ import org.junit.runner.Description
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 abstract class BaseUnitTest {
-    
     @get:Rule
     val testCoroutineRule = TestCoroutineRule()
     
     protected val testScope = TestScope(UnconfinedTestDispatcher())
-    
+
     @Before
     open fun setUp() {
         // Common setup for all unit tests

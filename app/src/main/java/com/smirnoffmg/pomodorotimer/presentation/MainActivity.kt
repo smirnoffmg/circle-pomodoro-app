@@ -4,8 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.runtime.Composable
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.smirnoffmg.pomodorotimer.analytics.AnalyticsHelper
 import com.smirnoffmg.pomodorotimer.presentation.ui.screens.MainTimerScreen
+import com.smirnoffmg.pomodorotimer.presentation.ui.screens.TimerSettingsScreen
 import com.smirnoffmg.pomodorotimer.presentation.ui.theme.PomodoroTimerTheme
 import com.smirnoffmg.pomodorotimer.presentation.viewmodel.MainTimerViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,7 +27,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             PomodoroTimerTheme {
-                MainTimerScreen(viewModel = viewModel)
+                PomodoroApp(viewModel = viewModel)
             }
         }
     }
@@ -35,6 +40,37 @@ class MainActivity : ComponentActivity() {
         viewModel.loadDailyStatistics()
         
         // Force widget update to ensure correct layout
-        com.smirnoffmg.pomodorotimer.widget.CircleTimerWidget.updateAllWidgets(this)
+        com.smirnoffmg.pomodorotimer.widget.CircleTimerWidget
+            .updateAllWidgets(this)
+        
+        // Reload timer settings to pick up any changes from settings screen
+        viewModel.reloadTimerSettings()
+    }
+}
+
+@Composable
+fun PomodoroApp(viewModel: MainTimerViewModel) {
+    val navController = rememberNavController()
+    
+    NavHost(
+        navController = navController,
+        startDestination = "timer"
+    ) {
+        composable("timer") {
+            MainTimerScreen(
+                viewModel = viewModel,
+                onNavigateToSettings = {
+                    navController.navigate("settings")
+                }
+            )
+        }
+        
+        composable("settings") {
+            TimerSettingsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
     }
 }

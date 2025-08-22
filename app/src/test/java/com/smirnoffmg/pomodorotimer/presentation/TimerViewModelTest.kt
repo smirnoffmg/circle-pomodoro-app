@@ -10,7 +10,6 @@ import org.junit.Test
  * Tests core logic without complex dependencies or mocking.
  */
 class TimerViewModelTest {
-
     @Test
     fun `duration conversion should work correctly`() {
         // Given
@@ -30,13 +29,14 @@ class TimerViewModelTest {
         val durationMillis = 0L
 
         // When
-        val session = PomodoroSession(
-            duration = durationMillis,
-            startTime = System.currentTimeMillis(),
-            endTime = null,
-            isCompleted = false,
-            type = SessionType.WORK
-        )
+        val session =
+            PomodoroSession(
+                duration = durationMillis,
+                startTime = System.currentTimeMillis(),
+                endTime = null,
+                isCompleted = false,
+                type = SessionType.WORK
+            )
 
         // Then
         assertThat(session.duration).isEqualTo(0)
@@ -49,13 +49,14 @@ class TimerViewModelTest {
         val durationMillis = 1500L // 1.5 seconds
 
         // When
-        val session = PomodoroSession(
-            duration = durationMillis,
-            startTime = System.currentTimeMillis(),
-            endTime = null,
-            isCompleted = false,
-            type = SessionType.WORK
-        )
+        val session =
+            PomodoroSession(
+                duration = durationMillis,
+                startTime = System.currentTimeMillis(),
+                endTime = null,
+                isCompleted = false,
+                type = SessionType.WORK
+            )
 
         // Then
         assertThat(session.duration).isEqualTo(1500)
@@ -68,14 +69,15 @@ class TimerViewModelTest {
         val timestamp = System.currentTimeMillis()
 
         // When
-        val session = PomodoroSession(
-            id = 1,
-            duration = durationMillis,
-            startTime = timestamp,
-            endTime = null,
-            isCompleted = false,
-            type = SessionType.WORK
-        )
+        val session =
+            PomodoroSession(
+                id = 1,
+                duration = durationMillis,
+                startTime = timestamp,
+                endTime = null,
+                isCompleted = false,
+                type = SessionType.WORK
+            )
 
         // Then
         assertThat(session.id).isEqualTo(1)

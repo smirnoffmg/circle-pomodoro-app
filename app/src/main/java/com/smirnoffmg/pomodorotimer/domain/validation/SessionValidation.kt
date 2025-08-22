@@ -5,17 +5,29 @@ import com.smirnoffmg.pomodorotimer.domain.model.SessionType
 
 sealed class ValidationResult {
     object Valid : ValidationResult()
-    data class Invalid(val errors: List<ValidationError>) : ValidationResult()
+
+    data class Invalid(
+        val errors: List<ValidationError>
+    ) : ValidationResult()
 }
 
-sealed class ValidationError(val message: String) {
+sealed class ValidationError(
+    val message: String
+) {
     object InvalidDuration : ValidationError("Duration must be greater than 0")
+
     object InvalidStartTime : ValidationError("Start time cannot be in the future")
+
     object InvalidEndTime : ValidationError("End time cannot be before start time")
+
     object InvalidSessionType : ValidationError("Session type is required")
+
     object SessionTooLong : ValidationError("Session duration exceeds maximum allowed")
+
     object SessionTooShort : ValidationError("Session duration is below minimum allowed")
+
     object InvalidCompletionState : ValidationError("Completed session must have an end time")
+
     object InconsistentDuration : ValidationError("Calculated duration doesn't match provided duration")
 }
 
@@ -72,15 +84,16 @@ object SessionValidator {
         }
     }
 
-    fun validateDuration(duration: Long, sessionType: SessionType): ValidationResult {
+    fun validateDuration(
+        duration: Long,
+        sessionType: SessionType
+    ): ValidationResult {
         val errors = mutableListOf<ValidationError>()
 
         if (duration <= 0) {
             errors.add(ValidationError.InvalidDuration)
             return ValidationResult.Invalid(errors)
         }
-
-
 
         // Allow some flexibility but warn about extremes
         when (sessionType) {
@@ -120,9 +133,8 @@ fun PomodoroSession.validate(): ValidationResult = SessionValidator.validate(thi
 
 fun PomodoroSession.isValid(): Boolean = validate() is ValidationResult.Valid
 
-fun ValidationResult.getErrorMessages(): List<String> {
-    return when (this) {
+fun ValidationResult.getErrorMessages(): List<String> =
+    when (this) {
         is ValidationResult.Valid -> emptyList()
         is ValidationResult.Invalid -> errors.map { it.message }
     }
-}

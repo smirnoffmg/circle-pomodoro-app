@@ -4,8 +4,11 @@ import android.content.Context
 import androidx.room.Room
 import com.smirnoffmg.pomodorotimer.data.local.db.PomodoroDatabase
 import com.smirnoffmg.pomodorotimer.data.local.db.dao.PomodoroSessionDao
+import com.smirnoffmg.pomodorotimer.data.local.db.dao.TimerSettingsDao
 import com.smirnoffmg.pomodorotimer.data.repository.PomodoroRepositoryImpl
+import com.smirnoffmg.pomodorotimer.data.repository.TimerSettingsRepositoryImpl
 import com.smirnoffmg.pomodorotimer.domain.repository.PomodoroRepository
+import com.smirnoffmg.pomodorotimer.domain.repository.TimerSettingsRepository
 import com.smirnoffmg.pomodorotimer.service.TimerServiceManager
 import dagger.Module
 import dagger.Provides
@@ -21,7 +24,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-
     private const val DATABASE_NAME = "pomodoro_database"
 
     /**
@@ -32,14 +34,14 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(
         @ApplicationContext context: Context,
-    ): PomodoroDatabase = Room
-        .databaseBuilder(
-            context,
-            PomodoroDatabase::class.java,
-            DATABASE_NAME,
-        )
-        .addMigrations(PomodoroDatabase.MIGRATION_1_2, PomodoroDatabase.MIGRATION_2_3)
-        .build()
+    ): PomodoroDatabase =
+        Room
+            .databaseBuilder(
+                context,
+                PomodoroDatabase::class.java,
+                DATABASE_NAME,
+            ).addMigrations(PomodoroDatabase.MIGRATION_1_2, PomodoroDatabase.MIGRATION_2_3, PomodoroDatabase.MIGRATION_3_4)
+            .build()
 
     /**
      * Provides PomodoroSessionDao following Single Responsibility Principle.
@@ -47,8 +49,11 @@ object DatabaseModule {
      */
     @Provides
     @Singleton
-    fun providePomodoroSessionDao(database: PomodoroDatabase): PomodoroSessionDao =
-        database.pomodoroSessionDao()
+    fun providePomodoroSessionDao(database: PomodoroDatabase): PomodoroSessionDao = database.pomodoroSessionDao()
+
+    @Provides
+    @Singleton
+    fun provideTimerSettingsDao(database: PomodoroDatabase): TimerSettingsDao = database.timerSettingsDao()
 
     /**
      * Provides PomodoroRepository following Dependency Inversion Principle.
@@ -56,8 +61,11 @@ object DatabaseModule {
      */
     @Provides
     @Singleton
-    fun providePomodoroRepository(dao: PomodoroSessionDao): PomodoroRepository =
-        PomodoroRepositoryImpl(dao)
+    fun providePomodoroRepository(dao: PomodoroSessionDao): PomodoroRepository = PomodoroRepositoryImpl(dao)
+
+    @Provides
+    @Singleton
+    fun provideTimerSettingsRepository(dao: TimerSettingsDao): TimerSettingsRepository = TimerSettingsRepositoryImpl(dao)
 
     /**
      * Provides TimerServiceManager following Single Responsibility Principle.
