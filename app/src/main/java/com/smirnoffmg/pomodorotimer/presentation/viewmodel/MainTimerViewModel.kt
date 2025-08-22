@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.smirnoffmg.pomodorotimer.domain.model.DailyStatistics
 import com.smirnoffmg.pomodorotimer.domain.usecase.GetDailyStatisticsUseCase
 import com.smirnoffmg.pomodorotimer.service.TimerServiceManager
+import com.smirnoffmg.pomodorotimer.service.TimerForegroundService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,7 @@ class MainTimerViewModel @Inject constructor(
     val timerState: StateFlow<TimerState> = serviceManager.timerState
     val remainingTime: StateFlow<Long> = serviceManager.remainingTime
     val progress: StateFlow<Float> = serviceManager.progress
+    val cycleType: StateFlow<TimerForegroundService.CycleType> = serviceManager.cycleType
 
     private val _dailyStatistics = MutableStateFlow(DailyStatistics.empty())
     val dailyStatistics: StateFlow<DailyStatistics> = _dailyStatistics.asStateFlow()
@@ -76,6 +78,15 @@ class MainTimerViewModel @Inject constructor(
 
     fun dismissCelebration() {
         _showCelebration.value = false
+    }
+
+    fun skipBreak() {
+        serviceManager.skipBreak()
+    }
+
+    fun isBreakSession(): Boolean {
+        return cycleType.value == TimerForegroundService.CycleType.BREAK || 
+               cycleType.value == TimerForegroundService.CycleType.LONG_BREAK
     }
 
     override fun onCleared() {

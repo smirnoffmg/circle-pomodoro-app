@@ -80,11 +80,7 @@ object SessionValidator {
             return ValidationResult.Invalid(errors)
         }
 
-        val recommendedDuration = when (sessionType) {
-            SessionType.WORK -> 25 * 60 * 1000L // 25 minutes
-            SessionType.SHORT_BREAK -> 5 * 60 * 1000L // 5 minutes
-            SessionType.LONG_BREAK -> 15 * 60 * 1000L // 15 minutes
-        }
+
 
         // Allow some flexibility but warn about extremes
         when (sessionType) {

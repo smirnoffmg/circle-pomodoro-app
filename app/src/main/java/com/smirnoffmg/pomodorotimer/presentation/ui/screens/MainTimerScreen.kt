@@ -48,6 +48,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import com.smirnoffmg.pomodorotimer.presentation.viewmodel.TimerState
 import com.smirnoffmg.pomodorotimer.presentation.viewmodel.MainTimerViewModel
+import com.smirnoffmg.pomodorotimer.service.TimerForegroundService
 import androidx.hilt.navigation.compose.hiltViewModel
 
 /**
@@ -66,6 +67,9 @@ fun MainTimerScreen(
     val progress by viewModel.progress.collectAsState()
     val dailyStatistics by viewModel.dailyStatistics.collectAsState()
     val showCelebration by viewModel.showCelebration.collectAsState()
+    
+    val cycleType by viewModel.cycleType.collectAsState()
+    val isBreakSession = viewModel.isBreakSession()
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -88,6 +92,7 @@ fun MainTimerScreen(
                 remainingTime = remainingTime,
                 progress = progress,
                 timerState = timerState,
+                cycleType = cycleType,
                 onTimerClick = {
                     when (timerState) {
                         TimerState.RUNNING -> viewModel.pauseTimer()
@@ -96,10 +101,12 @@ fun MainTimerScreen(
                 }
             )
 
-            // Secondary Stop Control (minimal, positioned at bottom)
-            TimerSecondaryControl(
+            // Secondary Controls (minimal, positioned at bottom)
+            TimerSecondaryControls(
                 timerState = timerState,
+                isBreakSession = isBreakSession,
                 onStopClick = { viewModel.stopTimer() },
+                onSkipBreakClick = { viewModel.skipBreak() },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 48.dp)
@@ -124,6 +131,7 @@ private fun CircularTimerDisplay(
     remainingTime: Long,
     progress: Float,
     timerState: TimerState,
+    cycleType: TimerForegroundService.CycleType,
     onTimerClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -151,7 +159,7 @@ private fun CircularTimerDisplay(
                 .testTag("timer_progress"),
             strokeWidth = 16.dp,
             strokeCap = StrokeCap.Round,
-            color = getTimerColor(timerState),
+            color = getTimerColor(timerState, cycleType),
             trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         )
 
@@ -294,27 +302,51 @@ private fun SessionTypeChip(
 }
 
 /**
- * Secondary control - minimal, non-intrusive.
- * Only essential stop functionality to maintain single-focus design.
+ * Secondary controls - minimal, non-intrusive.
+ * Shows stop button and skip break button when appropriate.
  */
 @Composable
-private fun TimerSecondaryControl(
+private fun TimerSecondaryControls(
     timerState: TimerState,
+    isBreakSession: Boolean,
     onStopClick: () -> Unit,
+    onSkipBreakClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (timerState != TimerState.STOPPED) {
-        FloatingActionButton(
-            onClick = onStopClick,
-            modifier = modifier.testTag("stop_button"),
-            containerColor = MaterialTheme.colorScheme.errorContainer,
-            contentColor = MaterialTheme.colorScheme.onErrorContainer
-        ) {
-            Icon(
-                imageVector = Icons.Default.Stop,
-                contentDescription = "Stop Timer",
-                modifier = Modifier.size(24.dp)
-            )
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Stop button (always shown when timer is active)
+        if (timerState != TimerState.STOPPED) {
+            FloatingActionButton(
+                onClick = onStopClick,
+                modifier = Modifier.testTag("stop_button"),
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Stop,
+                    contentDescription = "Stop Timer",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+        
+        // Skip break button (only shown during break sessions)
+        if (isBreakSession && timerState == TimerState.RUNNING) {
+            FloatingActionButton(
+                onClick = onSkipBreakClick,
+                modifier = Modifier.testTag("skip_break_button"),
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = "Skip Break",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }
@@ -390,14 +422,22 @@ private fun CelebrationOverlay(
 }
 
 /**
- * Get timer color based on state - follows Circle's color psychology.
+ * Get timer color based on state and cycle type - follows Circle's color psychology.
  * Calming blues/greens for focus, warm tones for breaks.
  */
 @Composable
-private fun getTimerColor(timerState: TimerState) = when (timerState) {
-    TimerState.RUNNING -> MaterialTheme.colorScheme.primary
-    TimerState.PAUSED -> MaterialTheme.colorScheme.secondary
-    TimerState.STOPPED -> MaterialTheme.colorScheme.outline
+private fun getTimerColor(
+    timerState: TimerState,
+    cycleType: TimerForegroundService.CycleType
+) = when {
+    timerState == TimerState.RUNNING && cycleType == TimerForegroundService.CycleType.WORK -> 
+        MaterialTheme.colorScheme.primary
+    timerState == TimerState.RUNNING && (cycleType == TimerForegroundService.CycleType.BREAK || cycleType == TimerForegroundService.CycleType.LONG_BREAK) -> 
+        MaterialTheme.colorScheme.secondary
+    timerState == TimerState.PAUSED -> 
+        MaterialTheme.colorScheme.secondary
+    else -> 
+        MaterialTheme.colorScheme.outline
 }
 
 /**

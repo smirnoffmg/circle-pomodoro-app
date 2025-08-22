@@ -35,6 +35,8 @@ import javax.inject.Inject
 class TimerForegroundService : Service() {
     companion object {
         private const val NOTIFICATION_ID = 1001
+        private const val BREAK_START_NOTIFICATION_ID = 1002
+        private const val BREAK_END_NOTIFICATION_ID = 1003
         private const val CHANNEL_ID = "timer_channel"
         private const val CHANNEL_NAME = "Timer Service"
         private const val WAKE_LOCK_TAG = "CircleTimer::WakeLock"
@@ -43,6 +45,7 @@ class TimerForegroundService : Service() {
         const val ACTION_START_TIMER = "com.smirnoffmg.pomodorotimer.START_TIMER"
         const val ACTION_PAUSE_TIMER = "com.smirnoffmg.pomodorotimer.PAUSE_TIMER"
         const val ACTION_STOP_TIMER = "com.smirnoffmg.pomodorotimer.STOP_TIMER"
+        const val ACTION_SKIP_BREAK = "com.smirnoffmg.pomodorotimer.SKIP_BREAK"
         const val ACTION_SET_DURATION = "com.smirnoffmg.pomodorotimer.SET_DURATION"
         const val EXTRA_DURATION = "extra_duration"
         
@@ -70,6 +73,9 @@ class TimerForegroundService : Service() {
 
     // Circle concept: Automatic cycle management
     private var currentCycleType = CycleType.WORK
+    
+    private val _cycleType = MutableStateFlow(CycleType.WORK)
+    val cycleType: StateFlow<CycleType> = _cycleType.asStateFlow()
     private var completedSessions = 0
     private var initialDuration: Long = DEFAULT_WORK_DURATION
 
@@ -106,8 +112,9 @@ class TimerForegroundService : Service() {
             ACTION_START_TIMER -> startTimer()
             ACTION_PAUSE_TIMER -> pauseTimer()
             ACTION_STOP_TIMER -> stopTimer()
+            ACTION_SKIP_BREAK -> skipBreak()
             ACTION_SET_DURATION -> {
-                val duration = intent?.getLongExtra(EXTRA_DURATION, DEFAULT_WORK_DURATION) ?: DEFAULT_WORK_DURATION
+                val duration = intent.getLongExtra(EXTRA_DURATION, DEFAULT_WORK_DURATION)
                 setTimerDuration(duration)
             }
         }
@@ -164,6 +171,13 @@ class TimerForegroundService : Service() {
         }
     }
 
+    fun skipBreak() {
+        if (currentCycleType == CycleType.BREAK || currentCycleType == CycleType.LONG_BREAK) {
+            // Skip break and start work immediately
+            startWork()
+        }
+    }
+
     private fun startCountdown() {
         timerJob = serviceScope.launch {
             while (_remainingTime.value > 0 && _timerState.value == TimerState.RUNNING) {
@@ -205,6 +219,8 @@ class TimerForegroundService : Service() {
                 }
             }
             CycleType.BREAK, CycleType.LONG_BREAK -> {
+                // Show break end notification before starting work
+                showBreakEndNotification()
                 startWork()
             }
         }
@@ -247,6 +263,7 @@ class TimerForegroundService : Service() {
 
     private fun startWork() {
         currentCycleType = CycleType.WORK
+        _cycleType.value = CycleType.WORK
         initialDuration = DEFAULT_WORK_DURATION
         _remainingTime.value = initialDuration
         _progress.value = 1f
@@ -263,10 +280,15 @@ class TimerForegroundService : Service() {
 
     private fun startBreak() {
         currentCycleType = CycleType.BREAK
+        _cycleType.value = CycleType.BREAK
         initialDuration = DEFAULT_BREAK_DURATION
         _remainingTime.value = initialDuration
         _progress.value = 1f
         _timerState.value = TimerState.RUNNING
+        
+        // Show break start notification
+        showBreakStartNotification()
+        
         updateNotification()
         scheduleAlarmBackup()
         startCountdown()
@@ -274,10 +296,15 @@ class TimerForegroundService : Service() {
 
     private fun startLongBreak() {
         currentCycleType = CycleType.LONG_BREAK
+        _cycleType.value = CycleType.LONG_BREAK
         initialDuration = DEFAULT_LONG_BREAK_DURATION
         _remainingTime.value = initialDuration
         _progress.value = 1f
         _timerState.value = TimerState.RUNNING
+        
+        // Show break start notification
+        showBreakStartNotification()
+        
         updateNotification()
         scheduleAlarmBackup()
         startCountdown()
@@ -388,6 +415,40 @@ class TimerForegroundService : Service() {
             _remainingTime.value,
             _timerState.value == TimerState.RUNNING
         )
+    }
+
+    private fun showBreakStartNotification() {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        
+        val breakType = when (currentCycleType) {
+            CycleType.BREAK -> "Break"
+            CycleType.LONG_BREAK -> "Long Break"
+            else -> "Break"
+        }
+        
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Time for a $breakType!")
+            .setContentText("Take a moment to rest and recharge.")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .build()
+        
+        notificationManager.notify(BREAK_START_NOTIFICATION_ID, notification)
+    }
+
+    private fun showBreakEndNotification() {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Break Complete!")
+            .setContentText("Ready to get back to work?")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .build()
+        
+        notificationManager.notify(BREAK_END_NOTIFICATION_ID, notification)
     }
 
     private fun acquireWakeLock() {

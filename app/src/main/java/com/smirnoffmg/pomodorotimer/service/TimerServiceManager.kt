@@ -35,6 +35,9 @@ class TimerServiceManager @Inject constructor(
     
     private val _progress = MutableStateFlow(1f)
     val progress: StateFlow<Float> = _progress.asStateFlow()
+    
+    private val _cycleType = MutableStateFlow(TimerForegroundService.CycleType.WORK)
+    val cycleType: StateFlow<TimerForegroundService.CycleType> = _cycleType.asStateFlow()
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
@@ -86,6 +89,13 @@ class TimerServiceManager @Inject constructor(
         context.startService(intent)
     }
 
+    fun skipBreak() {
+        val intent = Intent(context, TimerForegroundService::class.java).apply {
+            action = TimerForegroundService.ACTION_SKIP_BREAK
+        }
+        context.startService(intent)
+    }
+
 
 
     fun isServiceRunning(): Boolean = isBound && service != null
@@ -114,11 +124,13 @@ class TimerServiceManager @Inject constructor(
             _timerState.value = serviceInstance.timerState.value
             _remainingTime.value = serviceInstance.remainingTime.value
             _progress.value = serviceInstance.progress.value
+            _cycleType.value = serviceInstance.cycleType.value
             
             // Set up continuous sync
             serviceInstance.timerState.onEach { _timerState.value = it }.launchIn(scope)
             serviceInstance.remainingTime.onEach { _remainingTime.value = it }.launchIn(scope)
             serviceInstance.progress.onEach { _progress.value = it }.launchIn(scope)
+            serviceInstance.cycleType.onEach { _cycleType.value = it }.launchIn(scope)
         }
     }
 }
