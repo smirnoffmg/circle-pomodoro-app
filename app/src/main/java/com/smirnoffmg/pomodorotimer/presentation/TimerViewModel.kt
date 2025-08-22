@@ -2,9 +2,9 @@ package com.smirnoffmg.pomodorotimer.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.smirnoffmg.pomodorotimer.domain.model.TimerRecord
-import com.smirnoffmg.pomodorotimer.domain.usecase.AddTimerRecordUseCase
-import com.smirnoffmg.pomodorotimer.domain.usecase.GetTimerRecordsUseCase
+import com.smirnoffmg.pomodorotimer.domain.model.PomodoroSession
+import com.smirnoffmg.pomodorotimer.domain.model.SessionType
+import com.smirnoffmg.pomodorotimer.domain.repository.PomodoroRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,15 +18,14 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class TimerViewModel @Inject constructor(
-    private val getTimerRecordsUseCase: GetTimerRecordsUseCase,
-    private val addTimerRecordUseCase: AddTimerRecordUseCase,
+    private val pomodoroRepository: PomodoroRepository,
 ) : ViewModel() {
 
     /**
-     * Timer records state following KISS principle with simple state management.
+     * Pomodoro sessions state following KISS principle with simple state management.
      */
-    val timerRecords: StateFlow<List<TimerRecord>> =
-        getTimerRecordsUseCase()
+    val pomodoroSessions: StateFlow<List<PomodoroSession>> =
+        pomodoroRepository.getAllSessions()
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),
@@ -34,23 +33,26 @@ class TimerViewModel @Inject constructor(
             )
 
     /**
-     * Adds a timer record following Single Responsibility Principle.
-     * Only handles the action of adding a record.
+     * Adds a Pomodoro session following Single Responsibility Principle.
+     * Only handles the action of adding a session.
      */
-    fun addTimerRecord(durationMillis: Long) {
+    fun addPomodoroSession(durationMillis: Long) {
         viewModelScope.launch {
-            val timerRecord = createTimerRecord(durationMillis)
-            addTimerRecordUseCase(timerRecord)
+            val session = createPomodoroSession(durationMillis)
+            pomodoroRepository.insertSession(session)
         }
     }
 
     /**
-     * Creates a timer record following DRY principle.
-     * Centralizes timer record creation logic.
+     * Creates a Pomodoro session following DRY principle.
+     * Centralizes session creation logic.
      */
-    private fun createTimerRecord(durationMillis: Long): TimerRecord =
-        TimerRecord(
-            durationSeconds = (durationMillis / 1000).toInt(),
-            startTimestamp = System.currentTimeMillis(),
+    private fun createPomodoroSession(durationMillis: Long): PomodoroSession =
+        PomodoroSession(
+            startTime = System.currentTimeMillis(),
+            endTime = null,
+            duration = durationMillis,
+            isCompleted = false,
+            type = SessionType.WORK,
         )
 }

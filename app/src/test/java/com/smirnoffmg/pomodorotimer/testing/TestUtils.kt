@@ -2,7 +2,6 @@ package com.smirnoffmg.pomodorotimer.testing
 
 import com.smirnoffmg.pomodorotimer.domain.model.PomodoroSession
 import com.smirnoffmg.pomodorotimer.domain.model.SessionType
-import com.smirnoffmg.pomodorotimer.domain.model.TimerRecord
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestDispatcher
@@ -41,20 +40,6 @@ object TestUtils {
     )
 
     /**
-     * Creates a test TimerRecord with default values.
-     * Follows KISS principle by providing sensible defaults.
-     */
-    fun createTestTimerRecord(
-        id: Int = 1,
-        durationSeconds: Int = 25 * 60, // 25 minutes
-        startTimestamp: Long = System.currentTimeMillis()
-    ): TimerRecord = TimerRecord(
-        id = id,
-        durationSeconds = durationSeconds,
-        startTimestamp = startTimestamp
-    )
-
-    /**
      * Creates a list of test PomodoroSessions.
      * Follows DRY principle by reusing the single creation method.
      */
@@ -63,18 +48,6 @@ object TestUtils {
             createTestPomodoroSession(
                 id = index.toLong(),
                 startTime = System.currentTimeMillis() - (index * 25 * 60 * 1000)
-            )
-        }
-
-    /**
-     * Creates a list of test TimerRecords.
-     * Follows DRY principle by reusing the single creation method.
-     */
-    fun createTestTimerRecords(count: Int): List<TimerRecord> =
-        (1..count).map { index ->
-            createTestTimerRecord(
-                id = index,
-                startTimestamp = System.currentTimeMillis() - (index * 25 * 60 * 1000)
             )
         }
 }

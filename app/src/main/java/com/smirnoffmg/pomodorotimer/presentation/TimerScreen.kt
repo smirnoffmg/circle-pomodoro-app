@@ -13,26 +13,26 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.smirnoffmg.pomodorotimer.domain.model.TimerRecord
+import com.smirnoffmg.pomodorotimer.domain.model.PomodoroSession
 
 @Composable
 fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
-    val timerRecords by viewModel.timerRecords.collectAsState()
+    val pomodoroSessions by viewModel.pomodoroSessions.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Button(onClick = { viewModel.addTimerRecord(25 * 60 * 1000) }) {
-            Text("Add 25-minute record")
+        Button(onClick = { viewModel.addPomodoroSession(25 * 60 * 1000) }) {
+            Text("Add 25-minute session")
         }
 
         LazyColumn(modifier = Modifier.weight(1f)) {
-            items(timerRecords) { record ->
-                TimerRecordItem(record)
+            items(pomodoroSessions) { session ->
+                PomodoroSessionItem(session)
             }
         }
     }
 }
 
 @Composable
-fun TimerRecordItem(record: TimerRecord) {
-    Text("Record: ${record.id}, Duration: ${record.durationSeconds}s, Timestamp: ${record.startTimestamp}")
+fun PomodoroSessionItem(session: PomodoroSession) {
+    Text("Session: ${session.id}, Type: ${session.type}, Duration: ${session.duration / 1000}s, Completed: ${session.isCompleted}")
 }

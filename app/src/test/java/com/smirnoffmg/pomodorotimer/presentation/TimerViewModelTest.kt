@@ -1,7 +1,8 @@
 package com.smirnoffmg.pomodorotimer.presentation
 
 import com.google.common.truth.Truth.assertThat
-import com.smirnoffmg.pomodorotimer.domain.model.TimerRecord
+import com.smirnoffmg.pomodorotimer.domain.model.PomodoroSession
+import com.smirnoffmg.pomodorotimer.domain.model.SessionType
 import org.junit.Test
 
 /**
@@ -24,52 +25,62 @@ class TimerViewModelTest {
     }
 
     @Test
-    fun `timer record creation should work with zero duration`() {
+    fun `pomodoro session creation should work with zero duration`() {
         // Given
         val durationMillis = 0L
 
         // When
-        val timerRecord = TimerRecord(
-            durationSeconds = (durationMillis / 1000).toInt(),
-            startTimestamp = System.currentTimeMillis()
+        val session = PomodoroSession(
+            duration = durationMillis,
+            startTime = System.currentTimeMillis(),
+            endTime = null,
+            isCompleted = false,
+            type = SessionType.WORK
         )
 
         // Then
-        assertThat(timerRecord.durationSeconds).isEqualTo(0)
-        assertThat(timerRecord.id).isEqualTo(0)
+        assertThat(session.duration).isEqualTo(0)
+        assertThat(session.id).isEqualTo(0)
     }
 
     @Test
-    fun `timer record creation should round down partial seconds`() {
+    fun `pomodoro session creation should handle millisecond duration`() {
         // Given
         val durationMillis = 1500L // 1.5 seconds
 
         // When
-        val timerRecord = TimerRecord(
-            durationSeconds = (durationMillis / 1000).toInt(),
-            startTimestamp = System.currentTimeMillis()
+        val session = PomodoroSession(
+            duration = durationMillis,
+            startTime = System.currentTimeMillis(),
+            endTime = null,
+            isCompleted = false,
+            type = SessionType.WORK
         )
 
         // Then
-        assertThat(timerRecord.durationSeconds).isEqualTo(1)
+        assertThat(session.duration).isEqualTo(1500)
     }
 
     @Test
-    fun `timer record should have valid properties`() {
+    fun `pomodoro session should have valid properties`() {
         // Given
-        val durationSeconds = 1500
+        val durationMillis = 25 * 60 * 1000L
         val timestamp = System.currentTimeMillis()
 
         // When
-        val timerRecord = TimerRecord(
+        val session = PomodoroSession(
             id = 1,
-            durationSeconds = durationSeconds,
-            startTimestamp = timestamp
+            duration = durationMillis,
+            startTime = timestamp,
+            endTime = null,
+            isCompleted = false,
+            type = SessionType.WORK
         )
 
         // Then
-        assertThat(timerRecord.id).isEqualTo(1)
-        assertThat(timerRecord.durationSeconds).isEqualTo(1500)
-        assertThat(timerRecord.startTimestamp).isEqualTo(timestamp)
+        assertThat(session.id).isEqualTo(1)
+        assertThat(session.duration).isEqualTo(durationMillis)
+        assertThat(session.startTime).isEqualTo(timestamp)
+        assertThat(session.type).isEqualTo(SessionType.WORK)
     }
 }

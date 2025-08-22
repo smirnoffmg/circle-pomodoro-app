@@ -5,9 +5,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.smirnoffmg.pomodorotimer.data.local.db.PomodoroDatabase
 import com.smirnoffmg.pomodorotimer.data.local.db.dao.PomodoroSessionDao
-import com.smirnoffmg.pomodorotimer.data.local.db.dao.TimerRecordDao
 import com.smirnoffmg.pomodorotimer.data.repository.PomodoroRepositoryImpl
-import com.smirnoffmg.pomodorotimer.data.repository.TimerRepository
 import com.smirnoffmg.pomodorotimer.domain.repository.PomodoroRepository
 import dagger.Module
 import dagger.Provides
@@ -49,21 +47,6 @@ object TestDatabaseModule {
     @Singleton
     fun provideTestPomodoroSessionDao(database: PomodoroDatabase): PomodoroSessionDao =
         database.pomodoroSessionDao()
-
-    /**
-     * Provides test TimerRecordDao following Single Responsibility Principle.
-     */
-    @Provides
-    @Singleton
-    fun provideTestTimerRecordDao(database: PomodoroDatabase): TimerRecordDao =
-        database.timerRecordDao()
-
-    /**
-     * Provides test TimerRepository following Dependency Inversion Principle.
-     */
-    @Provides
-    @Singleton
-    fun provideTestTimerRepository(dao: TimerRecordDao): TimerRepository = TimerRepository(dao)
 
     /**
      * Provides test PomodoroRepository following Dependency Inversion Principle.

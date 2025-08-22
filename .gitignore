@@ -108,7 +108,7 @@ Temporary Items
 *.dex
 
 # AI
-
+.claude/
 CLAUDE.md
 
 # Java class files

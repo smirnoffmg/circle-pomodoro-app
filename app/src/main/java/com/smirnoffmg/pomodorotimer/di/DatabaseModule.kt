@@ -4,9 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.smirnoffmg.pomodorotimer.data.local.db.PomodoroDatabase
 import com.smirnoffmg.pomodorotimer.data.local.db.dao.PomodoroSessionDao
-import com.smirnoffmg.pomodorotimer.data.local.db.dao.TimerRecordDao
 import com.smirnoffmg.pomodorotimer.data.repository.PomodoroRepositoryImpl
-import com.smirnoffmg.pomodorotimer.data.repository.TimerRepository
 import com.smirnoffmg.pomodorotimer.domain.repository.PomodoroRepository
 import com.smirnoffmg.pomodorotimer.service.TimerServiceManager
 import dagger.Module
@@ -40,7 +38,7 @@ object DatabaseModule {
             PomodoroDatabase::class.java,
             DATABASE_NAME,
         )
-        .addMigrations(PomodoroDatabase.MIGRATION_1_2)
+        .addMigrations(PomodoroDatabase.MIGRATION_1_2, PomodoroDatabase.MIGRATION_2_3)
         .build()
 
     /**
@@ -51,23 +49,6 @@ object DatabaseModule {
     @Singleton
     fun providePomodoroSessionDao(database: PomodoroDatabase): PomodoroSessionDao =
         database.pomodoroSessionDao()
-
-    /**
-     * Provides TimerRecordDao following Single Responsibility Principle.
-     * Only handles timer record data access.
-     */
-    @Provides
-    @Singleton
-    fun provideTimerRecordDao(database: PomodoroDatabase): TimerRecordDao =
-        database.timerRecordDao()
-
-    /**
-     * Provides TimerRepository following Dependency Inversion Principle.
-     * Depends on abstraction (TimerRecordDao) rather than concrete implementation.
-     */
-    @Provides
-    @Singleton
-    fun provideTimerRepository(dao: TimerRecordDao): TimerRepository = TimerRepository(dao)
 
     /**
      * Provides PomodoroRepository following Dependency Inversion Principle.

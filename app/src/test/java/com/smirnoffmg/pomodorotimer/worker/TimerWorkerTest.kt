@@ -1,7 +1,8 @@
 package com.smirnoffmg.pomodorotimer.worker
 
 import com.google.common.truth.Truth.assertThat
-import com.smirnoffmg.pomodorotimer.domain.model.TimerRecord
+import com.smirnoffmg.pomodorotimer.domain.model.PomodoroSession
+import com.smirnoffmg.pomodorotimer.domain.model.SessionType
 import org.junit.Test
 
 /**
@@ -11,47 +12,53 @@ import org.junit.Test
 class TimerWorkerTest {
 
     @Test
-    fun `worker should create timer record with correct duration`() {
+    fun `worker should create pomodoro session with correct duration`() {
         // Given
-        val expectedDurationSeconds = 25 * 60 // 25 minutes
+        val expectedDurationMs = 25 * 60 * 1000L // 25 minutes
 
         // When
-        val timerRecord = TimerRecord(
-            durationSeconds = expectedDurationSeconds,
-            startTimestamp = System.currentTimeMillis()
+        val session = PomodoroSession(
+            duration = expectedDurationMs,
+            startTime = System.currentTimeMillis(),
+            endTime = null,
+            isCompleted = false,
+            type = SessionType.WORK
         )
 
         // Then
-        assertThat(timerRecord.durationSeconds).isEqualTo(1500) // 25 * 60
+        assertThat(session.duration).isEqualTo(25 * 60 * 1000L) // 25 minutes in milliseconds
     }
 
     @Test
     fun `worker constants should be correct`() {
         // Given
-        val expectedDuration = 25 * 60 // 25 minutes
+        val expectedDuration = 25 * 60 * 1000L // 25 minutes
 
         // When
-        val actualDuration = 25 * 60
+        val actualDuration = 25 * 60 * 1000L
 
         // Then
         assertThat(actualDuration).isEqualTo(expectedDuration)
-        assertThat(actualDuration).isEqualTo(1500)
+        assertThat(actualDuration).isEqualTo(1500000L)
     }
 
     @Test
-    fun `timer record should have valid timestamp`() {
+    fun `pomodoro session should have valid timestamp`() {
         // Given
         val beforeTimestamp = System.currentTimeMillis()
 
         // When
-        val timerRecord = TimerRecord(
-            durationSeconds = 25 * 60,
-            startTimestamp = System.currentTimeMillis()
+        val session = PomodoroSession(
+            duration = 25 * 60 * 1000L,
+            startTime = System.currentTimeMillis(),
+            endTime = null,
+            isCompleted = false,
+            type = SessionType.WORK
         )
         val afterTimestamp = System.currentTimeMillis()
 
         // Then
-        assertThat(timerRecord.startTimestamp).isAtLeast(beforeTimestamp)
-        assertThat(timerRecord.startTimestamp).isAtMost(afterTimestamp)
+        assertThat(session.startTime).isAtLeast(beforeTimestamp)
+        assertThat(session.startTime).isAtMost(afterTimestamp)
     }
 }
