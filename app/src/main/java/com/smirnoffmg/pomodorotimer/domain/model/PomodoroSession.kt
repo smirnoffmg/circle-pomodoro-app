@@ -7,6 +7,8 @@ data class PomodoroSession(
     val duration: Long,
     val isCompleted: Boolean,
     val type: SessionType,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
 )
 
 enum class SessionType {

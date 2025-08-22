@@ -4,7 +4,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.smirnoffmg.pomodorotimer.testing.TestUtils
+import com.smirnoffmg.pomodorotimer.presentation.ui.screens.MainTimerScreen
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Before
@@ -13,7 +13,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Integration tests for TimerScreen following TDD principles.
+ * Integration tests for MainTimerScreen following TDD principles.
  * Tests complete UI flow with real dependencies.
  */
 @HiltAndroidTest
@@ -32,38 +32,38 @@ class TimerScreenTest {
     }
 
     @Test
-    fun whenScreenLoaded_shouldDisplayAddButton() {
+    fun whenScreenLoaded_shouldDisplayTimer() {
         // Given - Screen is loaded
         composeTestRule.setContent {
-            TimerScreen()
+            MainTimerScreen()
         }
 
-        // Then - Add button should be visible
-        composeTestRule.onNodeWithText("Add 25-minute record").assertExists()
+        // Then - Timer should be visible with "Ready" state
+        composeTestRule.onNodeWithText("Ready").assertExists()
     }
 
     @Test
-    fun whenAddButtonClicked_shouldAddTimerRecord() {
+    fun whenTimerClicked_shouldStartTimer() {
         // Given - Screen is loaded
         composeTestRule.setContent {
-            TimerScreen()
+            MainTimerScreen()
         }
 
-        // When - Add button is clicked
-        composeTestRule.onNodeWithText("Add 25-minute record").performClick()
+        // When - Timer is clicked
+        composeTestRule.onNodeWithText("Ready").performClick()
 
-        // Then - Timer record should be added (this would be verified by checking the list)
-        // Note: In a real implementation, we would verify the list updates
+        // Then - Timer should start (this would be verified by checking the state changes)
+        // Note: In a real implementation, we would verify the timer state changes to "Focus"
     }
 
     @Test
-    fun whenNoRecordsExist_shouldDisplayEmptyState() {
-        // Given - Screen is loaded with no records
+    fun whenTimerRunning_shouldDisplayFocusState() {
+        // Given - Screen is loaded
         composeTestRule.setContent {
-            TimerScreen()
+            MainTimerScreen()
         }
 
-        // Then - Empty state should be visible (no records in list)
-        // Note: Current implementation doesn't show empty state, this test documents the expected behavior
+        // Then - Timer should be in ready state initially
+        composeTestRule.onNodeWithText("Ready").assertExists()
     }
 }

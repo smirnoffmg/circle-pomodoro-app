@@ -40,6 +40,7 @@ object DatabaseModule {
             PomodoroDatabase::class.java,
             DATABASE_NAME,
         )
+        .addMigrations(PomodoroDatabase.MIGRATION_1_2)
         .build()
 
     /**

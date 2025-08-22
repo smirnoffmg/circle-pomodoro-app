@@ -26,14 +26,18 @@ object TestUtils {
         endTime: Long? = null,
         duration: Long = 25 * 60 * 1000, // 25 minutes
         isCompleted: Boolean = false,
-        type: SessionType = SessionType.WORK
+        type: SessionType = SessionType.WORK,
+        createdAt: Long = System.currentTimeMillis(),
+        updatedAt: Long = System.currentTimeMillis()
     ): PomodoroSession = PomodoroSession(
         id = id,
         startTime = startTime,
         endTime = endTime,
         duration = duration,
         isCompleted = isCompleted,
-        type = type
+        type = type,
+        createdAt = createdAt,
+        updatedAt = updatedAt
     )
 
     /**

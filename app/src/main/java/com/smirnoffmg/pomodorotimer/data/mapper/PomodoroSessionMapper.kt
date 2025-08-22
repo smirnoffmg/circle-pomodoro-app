@@ -18,6 +18,8 @@ fun PomodoroSessionEntity.toDomain() =
                 "LONG_BREAK" -> SessionType.LONG_BREAK
                 else -> throw IllegalArgumentException("Unknown session type: $type")
             },
+        createdAt = createdAt,
+        updatedAt = updatedAt,
     )
 
 fun PomodoroSession.toEntity() =
@@ -33,4 +35,6 @@ fun PomodoroSession.toEntity() =
                 SessionType.SHORT_BREAK -> "SHORT_BREAK"
                 SessionType.LONG_BREAK -> "LONG_BREAK"
             },
+        createdAt = createdAt,
+        updatedAt = updatedAt,
     )
