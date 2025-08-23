@@ -152,6 +152,9 @@ dependencies {
     androidTestImplementation(libs.ui.test.junit4)
     androidTestImplementation(libs.hilt.android.testing)
     kspAndroidTest(libs.hilt.compiler)
+    
+    // Testing - UI Automator for notification testing
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.2.0")
 
     // Debug tools
     debugImplementation(libs.ui.tooling)
