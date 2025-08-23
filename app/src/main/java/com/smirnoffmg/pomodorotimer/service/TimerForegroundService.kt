@@ -2,7 +2,6 @@ package com.smirnoffmg.pomodorotimer.service
 
 import android.app.AlarmManager
 import android.app.Notification
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
@@ -12,11 +11,14 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
-import androidx.core.app.NotificationCompat
 import com.smirnoffmg.pomodorotimer.R
 import com.smirnoffmg.pomodorotimer.domain.model.SessionType
 import com.smirnoffmg.pomodorotimer.domain.usecase.StartSessionUseCase
 import com.smirnoffmg.pomodorotimer.domain.usecase.CompleteSessionUseCase
+import com.smirnoffmg.pomodorotimer.notification.NotificationHelper
+import com.smirnoffmg.pomodorotimer.timer.TimerRedundancyManager
+import com.smirnoffmg.pomodorotimer.timer.TimerHealthMonitor
+import com.smirnoffmg.pomodorotimer.timer.ServiceLifecycleEvent
 import com.smirnoffmg.pomodorotimer.presentation.MainActivity
 import com.smirnoffmg.pomodorotimer.presentation.viewmodel.TimerState
 import dagger.hilt.android.AndroidEntryPoint
@@ -36,18 +38,14 @@ import javax.inject.Inject
 class TimerForegroundService : Service() {
     companion object {
         private const val NOTIFICATION_ID = 1001
-        private const val BREAK_START_NOTIFICATION_ID = 1002
-        private const val BREAK_END_NOTIFICATION_ID = 1003
-        private const val CHANNEL_ID = "timer_channel"
-        private const val CHANNEL_NAME = "Timer Service"
         private const val WAKE_LOCK_TAG = "CircleTimer::WakeLock"
-        private const val ALARM_REQUEST_CODE = 1002
         
         const val ACTION_START_TIMER = "com.smirnoffmg.pomodorotimer.START_TIMER"
         const val ACTION_PAUSE_TIMER = "com.smirnoffmg.pomodorotimer.PAUSE_TIMER"
         const val ACTION_STOP_TIMER = "com.smirnoffmg.pomodorotimer.STOP_TIMER"
         const val ACTION_SKIP_BREAK = "com.smirnoffmg.pomodorotimer.SKIP_BREAK"
         const val ACTION_SET_DURATION = "com.smirnoffmg.pomodorotimer.SET_DURATION"
+        const val ACTION_TIMER_COMPLETE = "com.smirnoffmg.pomodorotimer.TIMER_COMPLETE"
         const val EXTRA_DURATION = "extra_duration"
 
         // Circle concept: Default intervals for immediate value delivery
@@ -60,8 +58,6 @@ class TimerForegroundService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var timerJob: Job? = null
     private var wakeLock: PowerManager.WakeLock? = null
-    private var alarmManager: AlarmManager? = null
-    private var alarmPendingIntent: PendingIntent? = null
 
     private val _timerState = MutableStateFlow(TimerState.STOPPED)
     val timerState: StateFlow<TimerState> = _timerState.asStateFlow()
@@ -77,7 +73,8 @@ class TimerForegroundService : Service() {
     
     private val _cycleType = MutableStateFlow(CycleType.WORK)
     val cycleType: StateFlow<CycleType> = _cycleType.asStateFlow()
-    private var completedSessions = 0
+    private var completedSessions = 0 // For cycle management (long break timing)
+    private var totalSessionsToday = 0 // For milestone notifications
     private var initialDuration: Long = DEFAULT_WORK_DURATION
 
     // Custom settings
@@ -97,6 +94,15 @@ class TimerForegroundService : Service() {
     // Settings dependencies
     @Inject
     lateinit var getTimerSettingsUseCase: com.smirnoffmg.pomodorotimer.domain.usecase.GetTimerSettingsUseCase
+    
+    @Inject
+    lateinit var notificationHelper: NotificationHelper
+    
+    @Inject
+    lateinit var redundancyManager: TimerRedundancyManager
+    
+    @Inject
+    lateinit var healthMonitor: TimerHealthMonitor
 
     private val binder = TimerBinder()
 
@@ -112,11 +118,10 @@ class TimerForegroundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
+        healthMonitor.reportServiceLifecycle(ServiceLifecycleEvent.SERVICE_STARTED)
         acquireWakeLock()
-        alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         
-        // Load settings in background - service starts immediately
+        // Load settings synchronously to ensure they're available immediately
         serviceScope.launch {
             loadSettings()
         }
@@ -128,10 +133,17 @@ class TimerForegroundService : Service() {
         startId: Int
     ): Int {
         when (intent?.action) {
-            ACTION_START_TIMER -> startTimer()
+            ACTION_START_TIMER -> {
+                val duration = intent.getLongExtra(EXTRA_DURATION, 0L)
+                if (duration > 0) {
+                    setTimerDuration(duration)
+                }
+                startTimer()
+            }
             ACTION_PAUSE_TIMER -> pauseTimer()
             ACTION_STOP_TIMER -> stopTimer()
             ACTION_SKIP_BREAK -> skipBreak()
+            ACTION_TIMER_COMPLETE -> onTimerComplete()
             ACTION_SET_DURATION -> {
                 val duration = intent.getLongExtra(EXTRA_DURATION, DEFAULT_WORK_DURATION)
                 setTimerDuration(duration)
@@ -144,16 +156,30 @@ class TimerForegroundService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        healthMonitor.reportServiceLifecycle(ServiceLifecycleEvent.SERVICE_STOPPED)
+        redundancyManager.stopTimer()
         releaseWakeLock()
-        cancelAlarm()
         timerJob?.cancel()
     }
 
     fun startTimer() {
         if (_timerState.value == TimerState.RUNNING) return
         
-        // Start timer immediately - don't wait for settings loading
-        startWork()
+        if (_timerState.value == TimerState.PAUSED) {
+            // Resume from paused state
+            _timerState.value = TimerState.RUNNING
+            redundancyManager.resumeTimer(_remainingTime.value * 1000L)
+            updateNotification()
+            // Fix: Remove duplicate alarm scheduling - TimerRedundancyManager handles backups
+            startCountdown()
+        } else {
+            // Start new timer - ensure settings are loaded first
+            serviceScope.launch {
+                // Wait for settings to load before starting timer (fix race condition)
+                loadSettings()
+                startWork()
+            }
+        }
     }
 
     fun pauseTimer() {
@@ -161,20 +187,22 @@ class TimerForegroundService : Service() {
         
         _timerState.value = TimerState.PAUSED
         timerJob?.cancel()
-        cancelAlarm()
+        
+        // Report to redundancy system
+        redundancyManager.pauseTimer()
         updateNotification()
     }
 
     fun stopTimer() {
         _timerState.value = TimerState.STOPPED
         timerJob?.cancel()
-        cancelAlarm()
         
         // Cancel active session if stopped manually during work
         if (currentCycleType == CycleType.WORK && activeSessionId != null) {
             cancelActiveSession()
         }
         
+        redundancyManager.stopTimer()
         resetToWorkCycle()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -196,8 +224,13 @@ class TimerForegroundService : Service() {
     }
 
     private fun startCountdown() {
+        // Cancel any existing countdown to prevent double speed
+        timerJob?.cancel()
+        android.util.Log
+            .d("TimerService", "Starting countdown with _remainingTime: ${_remainingTime.value}s, _timerState: ${_timerState.value}")
         timerJob =
             serviceScope.launch {
+                var lastHeartbeat = System.currentTimeMillis()
                 while (_remainingTime.value > 0 && _timerState.value == TimerState.RUNNING) {
                     delay(1000)
                     val currentTime = _remainingTime.value
@@ -205,6 +238,13 @@ class TimerForegroundService : Service() {
                         _remainingTime.value = currentTime - 1
                         updateProgress()
                         updateNotification()
+                        
+                        // Report heartbeat to redundancy system every 5 seconds
+                        val now = System.currentTimeMillis()
+                        if (now - lastHeartbeat >= 5000L) {
+                            redundancyManager.reportPrimaryTimerHeartbeat(currentTime * 1000L)
+                            lastHeartbeat = now
+                        }
                     }
                 }
                 if (_remainingTime.value <= 0) {
@@ -225,22 +265,40 @@ class TimerForegroundService : Service() {
     }
 
     private fun onTimerComplete() {
+        android.util.Log.d("TimerService", "Timer completed for cycle: $currentCycleType")
+        
         // Circle concept: Automatic cycle transitions
         when (currentCycleType) {
             CycleType.WORK -> {
                 completedSessions++
+                totalSessionsToday++
+                android.util.Log.d("TimerService", "Work session completed. Sessions: $completedSessions")
+                
                 // Notify that a work session was completed
                 notifySessionCompleted()
                 val sessionsBeforeLongBreak = currentSettings?.sessionsBeforeLongBreak ?: SESSIONS_BEFORE_LONG_BREAK
-                if (completedSessions % sessionsBeforeLongBreak == 0) {
-                    startLongBreak()
-                } else {
-                    startBreak()
+                
+                // Ensure settings are loaded before starting break
+                serviceScope.launch {
+                    if (currentSettings == null) {
+                        android.util.Log.d("TimerService", "Settings not loaded, loading before break")
+                        loadSettings()
+                    }
+                    
+                    if (completedSessions % sessionsBeforeLongBreak == 0) {
+                        android.util.Log.d("TimerService", "Starting long break")
+                        startLongBreak()
+                    } else {
+                        android.util.Log.d("TimerService", "Starting short break")
+                        startBreak()
+                    }
                 }
             }
             CycleType.BREAK, CycleType.LONG_BREAK -> {
+                android.util.Log.d("TimerService", "Break completed, starting work")
                 // Show break end notification before starting work
                 showBreakEndNotification()
+                // Work transition already handles settings loading
                 startWork()
             }
         }
@@ -254,12 +312,31 @@ class TimerForegroundService : Service() {
                     .getDefaultSettings()
             android.util.Log
                 .d("TimerService", "Settings loaded: work=${currentSettings?.workDurationMinutes}min, break=${currentSettings?.shortBreakDurationMinutes}min")
+            
+            // Update initial timer duration when timer is stopped (at app startup)
+            if (_timerState.value == TimerState.STOPPED && currentCycleType == CycleType.WORK) {
+                val workDuration = currentSettings?.workDurationSeconds ?: DEFAULT_WORK_DURATION
+                initialDuration = workDuration
+                _remainingTime.value = workDuration
+                _progress.value = 1f
+                android.util.Log
+                    .d("TimerService", "Updated initial timer duration to: ${workDuration}s (${workDuration / 60}min) from settings")
+            }
         } catch (e: Exception) {
             // Fall back to default settings if loading fails
             currentSettings =
                 com.smirnoffmg.pomodorotimer.domain.model.TimerSettings
                     .getDefaultSettings()
             android.util.Log.e("TimerService", "Failed to load settings, using defaults", e)
+            
+            // Update initial timer duration even with defaults when timer is stopped
+            if (_timerState.value == TimerState.STOPPED && currentCycleType == CycleType.WORK) {
+                val workDuration = currentSettings?.workDurationSeconds ?: DEFAULT_WORK_DURATION
+                initialDuration = workDuration
+                _remainingTime.value = workDuration
+                _progress.value = 1f
+                android.util.Log.d("TimerService", "Updated initial timer duration to default: ${workDuration}s (${workDuration / 60}min)")
+            }
         }
     }
 
@@ -298,6 +375,21 @@ class TimerForegroundService : Service() {
                 try {
                     completeSessionUseCase(sessionId)
                     activeSessionId = null
+                    
+                    // Show session completion notification
+                    notificationHelper.showSessionCompleteNotification(totalSessionsToday)
+                    
+                    // Check for milestones (every 5, 10, 25, 50 sessions)
+                    when (totalSessionsToday) {
+                        5, 10, 25, 50 -> {
+                            notificationHelper.showMilestoneNotification(totalSessionsToday)
+                        }
+                        in 1..Int.MAX_VALUE -> {
+                            if (totalSessionsToday % 100 == 0) {
+                                notificationHelper.showMilestoneNotification(totalSessionsToday)
+                            }
+                        }
+                    }
                 } catch (e: Exception) {
                     // Log error but don't crash the service
                 }
@@ -319,15 +411,24 @@ class TimerForegroundService : Service() {
         sessionStartTime = System.currentTimeMillis()
         createWorkSession()
         
+        // Start redundancy system
+        redundancyManager.startTimer(initialDuration * 1000L)
+        
         updateNotification()
-        scheduleAlarmBackup()
+        // Fix: Remove duplicate alarm scheduling - TimerRedundancyManager handles backups
         startCountdown()
     }
 
     private fun startBreak() {
         currentCycleType = CycleType.BREAK
         _cycleType.value = CycleType.BREAK
-        initialDuration = currentSettings?.shortBreakDurationSeconds ?: DEFAULT_BREAK_DURATION
+        
+        val settingsValue = currentSettings?.shortBreakDurationSeconds
+        initialDuration = settingsValue ?: DEFAULT_BREAK_DURATION
+        android.util.Log
+            .d("TimerService", "Starting short break - settings value: $settingsValue, final duration: ${initialDuration}s (${initialDuration / 60}min)")
+        android.util.Log.d("TimerService", "Current settings object: $currentSettings")
+        
         _remainingTime.value = initialDuration
         _progress.value = 1f
         _timerState.value = TimerState.RUNNING
@@ -335,8 +436,11 @@ class TimerForegroundService : Service() {
         // Show break start notification
         showBreakStartNotification()
         
+        // Start redundancy system for break
+        redundancyManager.startTimer(initialDuration * 1000L)
+        
         updateNotification()
-        scheduleAlarmBackup()
+        // Fix: Remove duplicate alarm scheduling - TimerRedundancyManager handles backups
         startCountdown()
     }
 
@@ -344,6 +448,7 @@ class TimerForegroundService : Service() {
         currentCycleType = CycleType.LONG_BREAK
         _cycleType.value = CycleType.LONG_BREAK
         initialDuration = currentSettings?.longBreakDurationSeconds ?: DEFAULT_LONG_BREAK_DURATION
+        android.util.Log.d("TimerService", "Starting long break with duration: ${initialDuration}s (${initialDuration / 60}min)")
         _remainingTime.value = initialDuration
         _progress.value = 1f
         _timerState.value = TimerState.RUNNING
@@ -351,8 +456,11 @@ class TimerForegroundService : Service() {
         // Show break start notification
         showBreakStartNotification()
         
+        // Start redundancy system for long break
+        redundancyManager.startTimer(initialDuration * 1000L)
+        
         updateNotification()
-        scheduleAlarmBackup()
+        // Fix: Remove duplicate alarm scheduling - TimerRedundancyManager handles backups
         startCountdown()
     }
 
@@ -364,75 +472,10 @@ class TimerForegroundService : Service() {
         _progress.value = 1f
     }
 
-    // Circle concept: AlarmManager backup for bulletproof reliability
-    private fun scheduleAlarmBackup() {
-        alarmManager?.let { alarm ->
-            val intent =
-                Intent(this, TimerForegroundService::class.java).apply {
-                    action = ACTION_STOP_TIMER
-                }
-            
-            alarmPendingIntent =
-                PendingIntent.getService(
-                    this,
-                    ALARM_REQUEST_CODE,
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-
-            val triggerTime = System.currentTimeMillis() + (_remainingTime.value * 1000)
-            
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarm.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerTime,
-                    alarmPendingIntent!!
-                )
-            } else {
-                alarm.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerTime,
-                    alarmPendingIntent!!
-                )
-            }
-        }
-    }
-
-    private fun cancelAlarm() {
-        alarmPendingIntent?.let { pendingIntent ->
-            alarmManager?.cancel(pendingIntent)
-            alarmPendingIntent = null
-        }
-    }
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel =
-                NotificationChannel(
-                    CHANNEL_ID,
-                    CHANNEL_NAME,
-                    NotificationManager.IMPORTANCE_LOW
-                ).apply {
-                    description = "Circle timer service notification"
-                    setShowBadge(false)
-                }
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
-    }
+    // Note: AlarmManager backup is now handled by TimerRedundancyManager
+    // This prevents dual alarm system conflicts that caused premature timer completion
 
     private fun createNotification(): Notification {
-        val intent =
-            Intent(this, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            }
-        
-        val pendingIntent =
-            PendingIntent.getActivity(
-                this, 0, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-
         val timeText = formatTime(_remainingTime.value)
         val cycleText =
             when (currentCycleType) {
@@ -440,28 +483,33 @@ class TimerForegroundService : Service() {
                 CycleType.BREAK -> "Break"
                 CycleType.LONG_BREAK -> "Long Break"
             }
-        val stateText =
-            when (_timerState.value) {
-                TimerState.RUNNING -> cycleText
-                TimerState.PAUSED -> "Paused"
-                TimerState.STOPPED -> "Stopped"
-            }
-
-        return NotificationCompat
-            .Builder(this, CHANNEL_ID)
-            .setContentTitle("Circle Timer")
-            .setContentText("$timeText - $stateText")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentIntent(pendingIntent)
-            .setOngoing(true)
-            .setSilent(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
+        
+        return if (currentCycleType == CycleType.WORK) {
+            notificationHelper.createTimerNotification(
+                remainingTime = timeText,
+                cycleType = cycleText,
+                isRunning = _timerState.value == TimerState.RUNNING
+            )
+        } else {
+            notificationHelper.createBreakNotification(
+                remainingTime = timeText,
+                breakType = cycleText,
+                isRunning = _timerState.value == TimerState.RUNNING
+            )
+        }
     }
 
     private fun updateNotification() {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(NOTIFICATION_ID, createNotification())
+        val notification = createNotification()
+        val notificationId = com.smirnoffmg.pomodorotimer.notification.NotificationHelper.TIMER_NOTIFICATION_ID
+        
+        // Start as foreground service if running, otherwise just update notification
+        if (_timerState.value == TimerState.RUNNING) {
+            startForeground(notificationId, notification)
+        } else {
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.notify(notificationId, notification)
+        }
         
         // Update widget (simplified)
         com.smirnoffmg.pomodorotimer.widget.CircleTimerWidget.updateTimerDisplay(
@@ -472,8 +520,6 @@ class TimerForegroundService : Service() {
     }
 
     private fun showBreakStartNotification() {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        
         val breakType =
             when (currentCycleType) {
                 CycleType.BREAK -> "Break"
@@ -481,33 +527,11 @@ class TimerForegroundService : Service() {
                 else -> "Break"
             }
         
-        val notification =
-            NotificationCompat
-                .Builder(this, CHANNEL_ID)
-                .setContentTitle("Time for a $breakType!")
-                .setContentText("Take a moment to rest and recharge.")
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setAutoCancel(true)
-                .build()
-        
-        notificationManager.notify(BREAK_START_NOTIFICATION_ID, notification)
+        notificationHelper.showBreakStartNotification(breakType)
     }
 
     private fun showBreakEndNotification() {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        
-        val notification =
-            NotificationCompat
-                .Builder(this, CHANNEL_ID)
-                .setContentTitle("Break Complete!")
-                .setContentText("Ready to get back to work?")
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setAutoCancel(true)
-                .build()
-        
-        notificationManager.notify(BREAK_END_NOTIFICATION_ID, notification)
+        notificationHelper.showBreakEndNotification()
     }
 
     private fun acquireWakeLock() {
@@ -531,9 +555,7 @@ class TimerForegroundService : Service() {
         wakeLock = null
     }
 
-    private fun formatTime(timeInSeconds: Long): String {
-        val minutes = timeInSeconds / 60
-        val seconds = timeInSeconds % 60
-        return String.format("%02d:%02d", minutes, seconds)
-    }
+    private fun formatTime(timeInSeconds: Long): String =
+        com.smirnoffmg.pomodorotimer.utils.TimeFormatter
+            .formatTime(timeInSeconds)
 }

@@ -50,5 +50,19 @@
                 android:resource="@xml/circle_timer_widget_info" />
         </receiver>
 
+        <!-- Timer Redundancy System Receiver -->
+        <receiver
+            android:name=".timer.TimerRedundancyReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.smirnoffmg.pomodorotimer.TIMER_BACKUP_ALARM" />
+                <action android:name="com.smirnoffmg.pomodorotimer.TIMER_HEALTH_CHECK" />
+                <action android:name="com.smirnoffmg.pomodorotimer.TIMER_FAILOVER" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
     </application>
 </manifest>

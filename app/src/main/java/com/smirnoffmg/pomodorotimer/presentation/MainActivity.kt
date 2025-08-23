@@ -1,7 +1,7 @@
 package com.smirnoffmg.pomodorotimer.presentation
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.smirnoffmg.pomodorotimer.analytics.AnalyticsHelper
+import com.smirnoffmg.pomodorotimer.notification.NotificationPermissionManager
 import com.smirnoffmg.pomodorotimer.presentation.ui.screens.MainTimerScreen
 import com.smirnoffmg.pomodorotimer.presentation.ui.screens.TimerSettingsScreen
 import com.smirnoffmg.pomodorotimer.presentation.ui.theme.PomodoroTimerTheme
@@ -17,18 +18,46 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var analyticsHelper: AnalyticsHelper
+    
+    @Inject
+    lateinit var notificationPermissionManager: NotificationPermissionManager
 
     private val viewModel: MainTimerViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
         setContent {
             PomodoroTimerTheme {
                 PomodoroApp(viewModel = viewModel)
             }
+        }
+        
+        // Request notification permissions if needed (API 33+) - do this after setContent
+        checkNotificationPermissions()
+    }
+
+    private fun checkNotificationPermissions() {
+        // Check if notifications need permissions and request them
+        try {
+            if (!notificationPermissionManager.isNotificationPermissionGranted()) {
+                notificationPermissionManager.checkAndRequestPermissionIfNeeded(
+                    activity = this,
+                    onPermissionGranted = {
+                        // Notifications are enabled, good to go
+                    },
+                    onPermissionDenied = {
+                        // User denied notification permission
+                        // App will still work but with limited notification features
+                    }
+                )
+            }
+        } catch (e: Exception) {
+            // If there's an error with permission checking, just continue
+            // The app should still work without notifications
         }
     }
 

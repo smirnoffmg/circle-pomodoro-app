@@ -133,10 +133,8 @@ class CircleTimerWidget : AppWidgetProvider() {
             }
         }
 
-        private fun formatTime(timeInSeconds: Long): String {
-            val minutes = timeInSeconds / 60
-            val seconds = timeInSeconds % 60
-            return String.format("%02d:%02d", minutes, seconds)
-        }
+        private fun formatTime(timeInSeconds: Long): String =
+            com.smirnoffmg.pomodorotimer.utils.TimeFormatter
+                .formatTime(timeInSeconds)
     }
 }

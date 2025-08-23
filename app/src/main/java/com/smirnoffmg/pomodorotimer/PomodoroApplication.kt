@@ -3,6 +3,7 @@ package com.smirnoffmg.pomodorotimer
 import android.app.Application
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.smirnoffmg.pomodorotimer.notification.NotificationChannelManager
 import com.smirnoffmg.pomodorotimer.worker.TimerWorker
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.TimeUnit
@@ -12,6 +13,13 @@ class PomodoroApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         setupWorkManager()
+        setupNotificationChannels()
+    }
+
+    private fun setupNotificationChannels() {
+        // Create notification channels directly without DI to avoid initialization issues
+        val channelManager = NotificationChannelManager(this)
+        channelManager.createNotificationChannels()
     }
 
     private fun setupWorkManager() {

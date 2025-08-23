@@ -6,6 +6,7 @@ import com.smirnoffmg.pomodorotimer.domain.model.TimerSettings
 import com.smirnoffmg.pomodorotimer.domain.usecase.GetTimerSettingsUseCase
 import com.smirnoffmg.pomodorotimer.domain.usecase.ResetTimerSettingsUseCase
 import com.smirnoffmg.pomodorotimer.domain.usecase.SaveTimerSettingsUseCase
+import com.smirnoffmg.pomodorotimer.service.TimerServiceManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +21,8 @@ class TimerSettingsViewModel
     constructor(
         private val getTimerSettingsUseCase: GetTimerSettingsUseCase,
         private val saveTimerSettingsUseCase: SaveTimerSettingsUseCase,
-        private val resetTimerSettingsUseCase: ResetTimerSettingsUseCase
+        private val resetTimerSettingsUseCase: ResetTimerSettingsUseCase,
+        private val timerServiceManager: TimerServiceManager
     ) : ViewModel() {
         private val _settings = MutableStateFlow<TimerSettings?>(null)
         val settings: StateFlow<TimerSettings?> = _settings.asStateFlow()
@@ -58,8 +60,8 @@ class TimerSettingsViewModel
                     val result = saveTimerSettingsUseCase(settings)
                     result.fold(
                         onSuccess = {
-                            // Settings saved successfully, don't update UI state here
-                            // to avoid conflicts with user input
+                            // Settings saved successfully - notify timer service immediately
+                            timerServiceManager.reloadSettings()
                         },
                         onFailure = { exception ->
                             _errorMessage.value = "Failed to save settings: ${exception.message}"
@@ -81,6 +83,8 @@ class TimerSettingsViewModel
                     result.fold(
                         onSuccess = {
                             _settings.value = TimerSettings.getDefaultSettings()
+                            // Notify timer service of reset settings
+                            timerServiceManager.reloadSettings()
                         },
                         onFailure = { exception ->
                             _errorMessage.value = "Failed to reset settings: ${exception.message}"

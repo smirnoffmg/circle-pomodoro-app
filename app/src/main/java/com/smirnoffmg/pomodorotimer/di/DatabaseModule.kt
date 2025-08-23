@@ -9,6 +9,7 @@ import com.smirnoffmg.pomodorotimer.data.repository.PomodoroRepositoryImpl
 import com.smirnoffmg.pomodorotimer.data.repository.TimerSettingsRepositoryImpl
 import com.smirnoffmg.pomodorotimer.domain.repository.PomodoroRepository
 import com.smirnoffmg.pomodorotimer.domain.repository.TimerSettingsRepository
+import com.smirnoffmg.pomodorotimer.domain.usecase.GetTimerSettingsUseCase
 import com.smirnoffmg.pomodorotimer.service.TimerServiceManager
 import dagger.Module
 import dagger.Provides
@@ -74,6 +75,7 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideTimerServiceManager(
-        @ApplicationContext context: Context
-    ): TimerServiceManager = TimerServiceManager(context)
+        @ApplicationContext context: Context,
+        getTimerSettingsUseCase: GetTimerSettingsUseCase
+    ): TimerServiceManager = TimerServiceManager(context, getTimerSettingsUseCase)
 }

@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
@@ -77,7 +78,9 @@ fun MainTimerScreen(
     val showSettingsChangedMessage by viewModel.showSettingsChangedMessage.collectAsState()
     
     val cycleType by viewModel.cycleType.collectAsState()
-    val isBreakSession = viewModel.isBreakSession()
+    val isBreakSession =
+        cycleType == TimerForegroundService.CycleType.BREAK || 
+            cycleType == TimerForegroundService.CycleType.LONG_BREAK
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -218,7 +221,7 @@ private fun CircularTimerDisplay(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = getTimerStateText(timerState),
+                text = getTimerStateText(timerState, cycleType),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -360,35 +363,35 @@ private fun TimerSecondaryControls(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Stop button (always shown when timer is active)
         if (timerState != TimerState.STOPPED) {
-            FloatingActionButton(
-                onClick = onStopClick,
-                modifier = Modifier.testTag("stop_button"),
-                containerColor = MaterialTheme.colorScheme.errorContainer,
-                contentColor = MaterialTheme.colorScheme.onErrorContainer
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Stop,
-                    contentDescription = "Stop Timer",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-        
-        // Skip break button (only shown during break sessions)
-        if (isBreakSession && timerState == TimerState.RUNNING) {
-            FloatingActionButton(
-                onClick = onSkipBreakClick,
-                modifier = Modifier.testTag("skip_break_button"),
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "Skip Break",
-                    modifier = Modifier.size(24.dp)
-                )
+            // During break sessions, show skip break button instead of stop button
+            if (isBreakSession && timerState == TimerState.RUNNING) {
+                FloatingActionButton(
+                    onClick = onSkipBreakClick,
+                    modifier = Modifier.testTag("skip_break_button"),
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.SkipNext,
+                        contentDescription = "Skip Break",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            } else {
+                // Show stop button for work sessions or paused states
+                FloatingActionButton(
+                    onClick = onStopClick,
+                    modifier = Modifier.testTag("stop_button"),
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Stop,
+                        contentDescription = "Stop Timer",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }
@@ -492,11 +495,9 @@ private fun getTimerColor(
 /**
  * Format time in MM:SS format - clean, minimal display.
  */
-private fun formatTime(timeInSeconds: Long): String {
-    val minutes = timeInSeconds / 60
-    val seconds = timeInSeconds % 60
-    return String.format("%02d:%02d", minutes, seconds)
-}
+private fun formatTime(timeInSeconds: Long): String =
+    com.smirnoffmg.pomodorotimer.utils.TimeFormatter
+        .formatTime(timeInSeconds)
 
 /**
  * Settings changed message overlay - informs user that settings won't affect current timer.
@@ -557,10 +558,23 @@ private fun SettingsChangedMessage(
 /**
  * Get timer state text - minimal, clear indication.
  */
-private fun getTimerStateText(timerState: TimerState): String =
+private fun getTimerStateText(
+    timerState: TimerState,
+    cycleType: TimerForegroundService.CycleType
+): String =
     when (timerState) {
-        TimerState.RUNNING -> "Focus"
-        TimerState.PAUSED -> "Paused"
+        TimerState.RUNNING ->
+            when (cycleType) {
+                TimerForegroundService.CycleType.WORK -> "Focus"
+                TimerForegroundService.CycleType.BREAK -> "Break"
+                TimerForegroundService.CycleType.LONG_BREAK -> "Long Break"
+            }
+        TimerState.PAUSED ->
+            when (cycleType) {
+                TimerForegroundService.CycleType.WORK -> "Focus Paused"
+                TimerForegroundService.CycleType.BREAK -> "Break Paused" 
+                TimerForegroundService.CycleType.LONG_BREAK -> "Long Break Paused"
+            }
         TimerState.STOPPED -> "Ready"
     }
 

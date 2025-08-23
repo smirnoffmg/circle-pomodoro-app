@@ -116,8 +116,8 @@ class PomodoroRepositoryImpl
                     .filter { it.type == SessionType.SHORT_BREAK || it.type == SessionType.LONG_BREAK }
                     .sumOf { it.duration }
 
-            val weekDurationInDays = ((weekEnd - weekStart) / (24 * 60 * 60 * 1000)).toInt()
-            val averageDailyWorkTime = if (weekDurationInDays > 0) totalWorkDuration / weekDurationInDays else 0
+            val weekDurationInDays = ((weekEnd - weekStart) / (24 * 60 * 60 * 1000L)).coerceAtLeast(1).toInt()
+            val averageDailyWorkTime = if (weekDurationInDays > 0) totalWorkDuration / weekDurationInDays else 0L
 
             return WeeklyStatistics(
                 weekStart = weekStart,
@@ -167,8 +167,8 @@ class PomodoroRepositoryImpl
                     .filter { it.type == SessionType.SHORT_BREAK || it.type == SessionType.LONG_BREAK }
                     .sumOf { it.duration }
 
-            val monthDurationInDays = ((monthEnd - monthStart) / (24 * 60 * 60 * 1000)).toInt()
-            val averageDailyWorkTime = if (monthDurationInDays > 0) totalWorkDuration / monthDurationInDays else 0
+            val monthDurationInDays = ((monthEnd - monthStart) / (24 * 60 * 60 * 1000L)).coerceAtLeast(1).toInt()
+            val averageDailyWorkTime = if (monthDurationInDays > 0) totalWorkDuration / monthDurationInDays else 0L
 
             return MonthlyStatistics(
                 monthStart = monthStart,

@@ -26,9 +26,11 @@ abstract class PomodoroDatabase : RoomDatabase() {
         val MIGRATION_1_2 =
             object : Migration(1, 2) {
                 override fun migrate(db: SupportSQLiteDatabase) {
+                    val currentTime = System.currentTimeMillis()
+                    
                     // Add new columns to pomodoro_sessions table
-                    db.execSQL("ALTER TABLE pomodoro_sessions ADD COLUMN createdAt INTEGER NOT NULL DEFAULT ${System.currentTimeMillis()}")
-                    db.execSQL("ALTER TABLE pomodoro_sessions ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT ${System.currentTimeMillis()}")
+                    db.execSQL("ALTER TABLE pomodoro_sessions ADD COLUMN createdAt INTEGER NOT NULL DEFAULT $currentTime")
+                    db.execSQL("ALTER TABLE pomodoro_sessions ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT $currentTime")
                 
                     // Create indexes for better query performance
                     db.execSQL("CREATE INDEX index_pomodoro_sessions_startTime ON pomodoro_sessions(startTime)")
@@ -49,6 +51,8 @@ abstract class PomodoroDatabase : RoomDatabase() {
         val MIGRATION_3_4 =
             object : Migration(3, 4) {
                 override fun migrate(db: SupportSQLiteDatabase) {
+                    val currentTime = System.currentTimeMillis()
+                    
                     // Create timer_settings table
                     db.execSQL("""
                     CREATE TABLE timer_settings (
@@ -68,7 +72,7 @@ abstract class PomodoroDatabase : RoomDatabase() {
                         id, workDurationMinutes, shortBreakDurationMinutes, 
                         longBreakDurationMinutes, sessionsBeforeLongBreak, 
                         createdAt, updatedAt
-                    ) VALUES (1, 25, 5, 15, 4, ${System.currentTimeMillis()}, ${System.currentTimeMillis()})
+                    ) VALUES (1, 25, 5, 15, 4, $currentTime, $currentTime)
                 """)
                 }
             }
