@@ -18,6 +18,7 @@ class NotificationAndroidVersionTest {
     private lateinit var context: Context
     private lateinit var notificationManager: NotificationManager
     private lateinit var channelManager: NotificationChannelManager
+    private lateinit var notificationSettings: NotificationSettings
     private lateinit var notificationHelper: NotificationHelper
     private lateinit var permissionManager: NotificationPermissionManager
 
@@ -26,7 +27,8 @@ class NotificationAndroidVersionTest {
         context = ApplicationProvider.getApplicationContext()
         notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         channelManager = NotificationChannelManager(context)
-        notificationHelper = NotificationHelper(context, channelManager)
+        notificationSettings = NotificationSettings(context)
+        notificationHelper = NotificationHelper(context, channelManager, notificationSettings)
         permissionManager = NotificationPermissionManager(context)
     }
 
@@ -114,8 +116,8 @@ class NotificationAndroidVersionTest {
             assertNotNull("Break notification should be created on older Android", breakNotification)
 
             // Verify basic properties
-            assertEquals("Pomodoro Timer", timerNotification.extras.getString("android.title"))
-            assertEquals("Break Time", breakNotification.extras.getString("android.title"))
+            assertEquals("Pomodoro Timer", timerNotification?.extras?.getString("android.title"))
+            assertEquals("Break Time", breakNotification?.extras?.getString("android.title"))
         }
 
     @Test
@@ -140,8 +142,8 @@ class NotificationAndroidVersionTest {
 
             // Then - Should work without issues
             assertNotNull("Timer notification should be created on latest Android", timerNotification)
-            assertEquals("Pomodoro Timer", timerNotification.extras.getString("android.title"))
-            assertEquals("20:00 - Paused", timerNotification.extras.getString("android.text"))
+            assertEquals("Pomodoro Timer", timerNotification?.extras?.getString("android.title"))
+            assertEquals("20:00 - Paused", timerNotification?.extras?.getString("android.text"))
 
             // Verify channels exist
             val timerChannel = notificationManager.getNotificationChannel(NotificationChannelManager.TIMER_CHANNEL_ID)
@@ -215,17 +217,17 @@ class NotificationAndroidVersionTest {
                 )
 
             // Then - Actions should be present
-            assertEquals("Running notification should have 2 actions", 2, runningNotification.actions?.size)
-            assertEquals("Paused notification should have 2 actions", 2, pausedNotification.actions?.size)
-            assertEquals("Break notification should have 2 actions", 2, breakNotification.actions?.size)
+            assertEquals("Running notification should have 2 actions", 2, runningNotification?.actions?.size)
+            assertEquals("Paused notification should have 2 actions", 2, pausedNotification?.actions?.size)
+            assertEquals("Break notification should have 2 actions", 2, breakNotification?.actions?.size)
 
             // Verify action types
             assertTrue("Should have Pause action", 
-                runningNotification.actions?.any { it.title == "Pause" } == true)
+                runningNotification?.actions?.any { it.title == "Pause" } == true)
             assertTrue("Should have Resume action",
-                pausedNotification.actions?.any { it.title == "Resume" } == true)
+                pausedNotification?.actions?.any { it.title == "Resume" } == true)
             assertTrue("Should have Skip action",
-                breakNotification.actions?.any { it.title == "Skip" } == true)
+                breakNotification?.actions?.any { it.title == "Skip" } == true)
         }
 
     @Test

@@ -18,7 +18,8 @@ class NotificationHelper
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
-        private val channelManager: NotificationChannelManager
+        private val channelManager: NotificationChannelManager,
+        private val notificationSettings: NotificationSettings
     ) {
         companion object {
             const val TIMER_NOTIFICATION_ID = 1001
@@ -36,14 +37,16 @@ class NotificationHelper
         private val notificationManager: NotificationManager by lazy {
             context.getSystemService() ?: throw IllegalStateException("NotificationManager not available")
         }
-    
-        // Channels are created in Application class to avoid circular dependencies
 
         fun createTimerNotification(
             remainingTime: String,
             cycleType: String,
             isRunning: Boolean
-        ): android.app.Notification {
+        ): android.app.Notification? {
+            if (!notificationSettings.isPersistentTimerNotificationEnabled) {
+                return null
+            }
+
             val intent =
                 Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -62,19 +65,16 @@ class NotificationHelper
                     .Builder(context, NotificationChannelManager.TIMER_CHANNEL_ID)
                     .setContentTitle("Pomodoro Timer")
                     .setContentText("$remainingTime - $stateText")
-                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setSmallIcon(getTimerIcon(isRunning))
                     .setContentIntent(pendingIntent)
                     .setOngoing(true)
                     .setSilent(true)
                     .setPriority(NotificationCompat.PRIORITY_LOW)
         
-            // Add action buttons based on current state
             if (isRunning) {
-                // Add pause and stop actions when running
                 builder.addAction(createPauseAction())
                 builder.addAction(createStopAction())
             } else {
-                // Add resume and stop actions when paused
                 builder.addAction(createResumeAction())
                 builder.addAction(createStopAction())
             }
@@ -86,7 +86,11 @@ class NotificationHelper
             remainingTime: String,
             breakType: String,
             isRunning: Boolean
-        ): android.app.Notification {
+        ): android.app.Notification? {
+            if (!notificationSettings.isPersistentTimerNotificationEnabled) {
+                return null
+            }
+
             val intent =
                 Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -105,13 +109,12 @@ class NotificationHelper
                     .Builder(context, NotificationChannelManager.TIMER_CHANNEL_ID)
                     .setContentTitle("Break Time")
                     .setContentText("$remainingTime - $stateText")
-                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setSmallIcon(getBreakIcon())
                     .setContentIntent(pendingIntent)
                     .setOngoing(true)
                     .setSilent(true)
                     .setPriority(NotificationCompat.PRIORITY_LOW)
         
-            // Add action buttons for break
             if (isRunning) {
                 builder.addAction(createSkipBreakAction())
                 builder.addAction(createStopAction())
@@ -124,6 +127,10 @@ class NotificationHelper
         }
 
         fun showBreakStartNotification(breakType: String) {
+            if (!notificationSettings.isBreakNotificationsEnabled) {
+                return
+            }
+
             val intent =
                 Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -140,7 +147,7 @@ class NotificationHelper
                     .Builder(context, NotificationChannelManager.BREAKS_CHANNEL_ID)
                     .setContentTitle("Time for a $breakType!")
                     .setContentText("Take a moment to rest and recharge.")
-                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setSmallIcon(getBreakIcon())
                     .setContentIntent(pendingIntent)
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setAutoCancel(true)
@@ -148,12 +155,23 @@ class NotificationHelper
                         NotificationCompat
                             .BigTextStyle()
                             .bigText("Great work! Take a moment to rest and recharge. Your break has started.")
-                    ).build()
+                    ).apply {
+                        if (notificationSettings.isNotificationSoundEnabled) {
+                            setSound(getBreakSound())
+                        }
+                        if (notificationSettings.isNotificationVibrationEnabled) {
+                            setVibrate(longArrayOf(0, 300, 200, 300))
+                        }
+                    }.build()
         
             notificationManager.notify(BREAK_START_NOTIFICATION_ID, notification)
         }
 
         fun showBreakEndNotification() {
+            if (!notificationSettings.isBreakNotificationsEnabled) {
+                return
+            }
+
             val intent =
                 Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -170,7 +188,7 @@ class NotificationHelper
                     .Builder(context, NotificationChannelManager.BREAKS_CHANNEL_ID)
                     .setContentTitle("Break Complete!")
                     .setContentText("Ready to get back to work?")
-                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setSmallIcon(getBreakIcon())
                     .setContentIntent(pendingIntent)
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setAutoCancel(true)
@@ -178,14 +196,25 @@ class NotificationHelper
                         NotificationCompat
                             .BigTextStyle()
                             .bigText("Your break is over. Ready to focus and be productive again?")
-                    ).build()
+                    ).apply {
+                        if (notificationSettings.isNotificationSoundEnabled) {
+                            setSound(getBreakSound())
+                        }
+                        if (notificationSettings.isNotificationVibrationEnabled) {
+                            setVibrate(longArrayOf(0, 300, 200, 300))
+                        }
+                    }.build()
         
             notificationManager.notify(BREAK_END_NOTIFICATION_ID, notification)
         }
 
         fun showSessionCompleteNotification(sessionCount: Int) {
-            // Validate session count to avoid nonsensical notifications
+            if (!notificationSettings.isSessionCompleteNotificationsEnabled) {
+                return
+            }
+
             if (sessionCount <= 0 || sessionCount > 1000) return
+
             val intent =
                 Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -209,19 +238,30 @@ class NotificationHelper
                     .Builder(context, NotificationChannelManager.PROGRESS_CHANNEL_ID)
                     .setContentTitle(title)
                     .setContentText(text)
-                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setSmallIcon(getSessionCompleteIcon())
                     .setContentIntent(pendingIntent)
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setAutoCancel(true)
                     .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-                    .build()
+                    .apply {
+                        if (notificationSettings.isNotificationSoundEnabled) {
+                            setSound(getSessionCompleteSound())
+                        }
+                        if (notificationSettings.isNotificationVibrationEnabled) {
+                            setVibrate(longArrayOf(0, 100, 100, 100))
+                        }
+                    }.build()
         
             notificationManager.notify(SESSION_COMPLETE_NOTIFICATION_ID, notification)
         }
 
         fun showMilestoneNotification(milestone: Int) {
-            // Validate milestone to avoid nonsensical notifications
+            if (!notificationSettings.isMilestoneNotificationsEnabled) {
+                return
+            }
+
             if (milestone <= 0 || milestone > 10000) return
+
             val intent =
                 Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -241,12 +281,19 @@ class NotificationHelper
                     .Builder(context, NotificationChannelManager.PROGRESS_CHANNEL_ID)
                     .setContentTitle(title)
                     .setContentText(text)
-                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setSmallIcon(getMilestoneIcon())
                     .setContentIntent(pendingIntent)
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setAutoCancel(true)
                     .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-                    .build()
+                    .apply {
+                        if (notificationSettings.isNotificationSoundEnabled) {
+                            setSound(getMilestoneSound())
+                        }
+                        if (notificationSettings.isNotificationVibrationEnabled) {
+                            setVibrate(longArrayOf(0, 200, 100, 200, 100, 200))
+                        }
+                    }.build()
         
             notificationManager.notify(MILESTONE_NOTIFICATION_ID, notification)
         }
@@ -330,4 +377,23 @@ class NotificationHelper
                     pendingIntent
                 ).build()
         }
+
+        private fun getTimerIcon(isRunning: Boolean): Int =
+            if (isRunning) {
+                R.drawable.ic_timer_running
+            } else {
+                R.drawable.ic_timer_paused
+            }
+
+        private fun getBreakIcon(): Int = R.drawable.ic_break
+
+        private fun getSessionCompleteIcon(): Int = R.drawable.ic_session_complete
+
+        private fun getMilestoneIcon(): Int = R.drawable.ic_milestone
+
+        private fun getBreakSound(): android.net.Uri? = android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
+
+        private fun getSessionCompleteSound(): android.net.Uri? = android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
+
+        private fun getMilestoneSound(): android.net.Uri? = android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
     }

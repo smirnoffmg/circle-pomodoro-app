@@ -91,6 +91,9 @@ class TimerForegroundService : Service() {
     @Inject
     lateinit var completeSessionUseCase: CompleteSessionUseCase
 
+    @Inject
+    lateinit var getDailyStatisticsUseCase: com.smirnoffmg.pomodorotimer.domain.usecase.GetDailyStatisticsUseCase
+
     // Settings dependencies
     @Inject
     lateinit var getTimerSettingsUseCase: com.smirnoffmg.pomodorotimer.domain.usecase.GetTimerSettingsUseCase
@@ -121,9 +124,10 @@ class TimerForegroundService : Service() {
         healthMonitor.reportServiceLifecycle(ServiceLifecycleEvent.SERVICE_STARTED)
         acquireWakeLock()
         
-        // Load settings synchronously to ensure they're available immediately
+        // Load settings and daily session count to ensure they're available immediately
         serviceScope.launch {
             loadSettings()
+            loadTodaySessionCount()
         }
     }
 
@@ -340,6 +344,18 @@ class TimerForegroundService : Service() {
         }
     }
 
+    private suspend fun loadTodaySessionCount() {
+        try {
+            val todayStats = getDailyStatisticsUseCase.getTodayStatistics()
+            totalSessionsToday = todayStats.workSessions
+            android.util.Log.d("TimerService", "Loaded today's session count: $totalSessionsToday")
+        } catch (e: Exception) {
+            android.util.Log.e("TimerService", "Failed to load today's session count", e)
+            // Start with 0 if count can't be loaded
+            totalSessionsToday = 0
+        }
+    }
+
     fun reloadSettings() {
         serviceScope.launch {
             loadSettings()
@@ -475,7 +491,7 @@ class TimerForegroundService : Service() {
     // Note: AlarmManager backup is now handled by TimerRedundancyManager
     // This prevents dual alarm system conflicts that caused premature timer completion
 
-    private fun createNotification(): Notification {
+    private fun createNotification(): Notification? {
         val timeText = formatTime(_remainingTime.value)
         val cycleText =
             when (currentCycleType) {
@@ -503,12 +519,19 @@ class TimerForegroundService : Service() {
         val notification = createNotification()
         val notificationId = com.smirnoffmg.pomodorotimer.notification.NotificationHelper.TIMER_NOTIFICATION_ID
         
-        // Start as foreground service if running, otherwise just update notification
-        if (_timerState.value == TimerState.RUNNING) {
-            startForeground(notificationId, notification)
+        if (notification != null) {
+            // Start as foreground service if running, otherwise just update notification
+            if (_timerState.value == TimerState.RUNNING) {
+                startForeground(notificationId, notification)
+            } else {
+                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.notify(notificationId, notification)
+            }
         } else {
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.notify(notificationId, notification)
+            // If notification is null (disabled by settings), stop foreground service
+            if (_timerState.value == TimerState.RUNNING) {
+                stopForeground(true)
+            }
         }
         
         // Update widget (simplified)

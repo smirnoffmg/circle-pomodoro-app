@@ -21,6 +21,7 @@ class NotificationIntegrationTest {
     private lateinit var context: Context
     private lateinit var notificationManager: NotificationManager
     private lateinit var channelManager: NotificationChannelManager
+    private lateinit var notificationSettings: NotificationSettings
     private lateinit var notificationHelper: NotificationHelper
     private lateinit var permissionManager: NotificationPermissionManager
 
@@ -29,7 +30,8 @@ class NotificationIntegrationTest {
         context = ApplicationProvider.getApplicationContext()
         notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         channelManager = NotificationChannelManager(context)
-        notificationHelper = NotificationHelper(context, channelManager)
+        notificationSettings = NotificationSettings(context)
+        notificationHelper = NotificationHelper(context, channelManager, notificationSettings)
         permissionManager = NotificationPermissionManager(context)
     }
 
@@ -64,11 +66,11 @@ class NotificationIntegrationTest {
             assertNotNull("Break notification should be created", breakNotification)
         
             // Verify notification properties
-            assertEquals("Pomodoro Timer", timerNotification.extras.getString("android.title"))
-            assertEquals("25:00 - Work", timerNotification.extras.getString("android.text"))
+            assertEquals("Pomodoro Timer", timerNotification?.extras?.getString("android.title"))
+            assertEquals("25:00 - Work", timerNotification?.extras?.getString("android.text"))
         
-            assertEquals("Break Time", breakNotification.extras.getString("android.title"))
-            assertEquals("05:00 - Short Break", breakNotification.extras.getString("android.text"))
+            assertEquals("Break Time", breakNotification?.extras?.getString("android.title"))
+            assertEquals("05:00 - Short Break", breakNotification?.extras?.getString("android.text"))
 
             // Verify channels exist
             val timerChannel = notificationManager.getNotificationChannel(NotificationChannelManager.TIMER_CHANNEL_ID)
@@ -109,27 +111,27 @@ class NotificationIntegrationTest {
                 )
 
             // Then - Verify action buttons
-            assertEquals("Running timer should have 2 actions", 2, runningTimerNotification.actions?.size)
-            assertEquals("Paused timer should have 2 actions", 2, pausedTimerNotification.actions?.size)
-            assertEquals("Break notification should have 2 actions", 2, breakNotification.actions?.size)
+            assertEquals("Running timer should have 2 actions", 2, runningTimerNotification?.actions?.size)
+            assertEquals("Paused timer should have 2 actions", 2, pausedTimerNotification?.actions?.size)
+            assertEquals("Break notification should have 2 actions", 2, breakNotification?.actions?.size)
 
             // Verify specific actions for running timer
             assertTrue("Should have Pause action", 
-                runningTimerNotification.actions?.any { it.title == "Pause" } == true)
+                runningTimerNotification?.actions?.any { it.title == "Pause" } == true)
             assertTrue("Should have Stop action",
-                runningTimerNotification.actions?.any { it.title == "Stop" } == true)
+                runningTimerNotification?.actions?.any { it.title == "Stop" } == true)
 
             // Verify specific actions for paused timer
             assertTrue("Should have Resume action",
-                pausedTimerNotification.actions?.any { it.title == "Resume" } == true)
+                pausedTimerNotification?.actions?.any { it.title == "Resume" } == true)
             assertTrue("Should have Stop action", 
-                pausedTimerNotification.actions?.any { it.title == "Stop" } == true)
+                pausedTimerNotification?.actions?.any { it.title == "Stop" } == true)
 
             // Verify specific actions for break
             assertTrue("Should have Skip action",
-                breakNotification.actions?.any { it.title == "Skip" } == true)
+                breakNotification?.actions?.any { it.title == "Skip" } == true)
             assertTrue("Should have Stop action",
-                breakNotification.actions?.any { it.title == "Stop" } == true)
+                breakNotification?.actions?.any { it.title == "Stop" } == true)
         }
 
     @Test

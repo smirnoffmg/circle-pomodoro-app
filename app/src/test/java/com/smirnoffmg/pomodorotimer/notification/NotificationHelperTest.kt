@@ -24,6 +24,7 @@ class NotificationHelperTest {
     private lateinit var context: Context
     private lateinit var notificationManager: NotificationManager
     private lateinit var channelManager: NotificationChannelManager
+    private lateinit var notificationSettings: NotificationSettings
     private lateinit var notificationHelper: NotificationHelper
 
     @Before
@@ -31,7 +32,8 @@ class NotificationHelperTest {
         context = ApplicationProvider.getApplicationContext()
         notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         channelManager = NotificationChannelManager(context)
-        notificationHelper = NotificationHelper(context, channelManager)
+        notificationSettings = NotificationSettings(context)
+        notificationHelper = NotificationHelper(context, channelManager, notificationSettings)
         
         // Create notification channels for testing
         channelManager.createNotificationChannels()
@@ -66,8 +68,8 @@ class NotificationHelperTest {
 
             // Then
             assertNotNull(notification)
-            assertEquals("Pomodoro Timer", notification.extras.getString("android.title"))
-            assertTrue("Should contain remaining time", notification.extras.getString("android.text")?.contains(remainingTime) == true)
+            assertEquals("Pomodoro Timer", notification?.extras?.getString("android.title"))
+            assertTrue("Should contain remaining time", notification?.extras?.getString("android.text")?.contains(remainingTime) == true)
         }
 
     @Test
@@ -83,10 +85,10 @@ class NotificationHelperTest {
 
             // Then
             assertNotNull(notification)
-            assertNotNull("Should have actions", notification.actions)
-            assertEquals("Should have 2 actions: Pause and Stop", 2, notification.actions!!.size)
-            assertTrue("Should have pause action", notification.actions!!.any { it.title == "Pause" })
-            assertTrue("Should have stop action", notification.actions!!.any { it.title == "Stop" })
+            assertNotNull("Should have actions", notification?.actions)
+            assertEquals("Should have 2 actions: Pause and Stop", 2, notification?.actions?.size)
+            assertTrue("Should have pause action", notification?.actions?.any { it.title == "Pause" } == true)
+            assertTrue("Should have stop action", notification?.actions?.any { it.title == "Stop" } == true)
         }
 
     @Test
@@ -102,10 +104,10 @@ class NotificationHelperTest {
 
             // Then
             assertNotNull(notification)
-            assertNotNull("Should have actions", notification.actions)
-            assertEquals("Should have 2 actions: Resume and Stop", 2, notification.actions!!.size)
-            assertTrue("Should have resume action", notification.actions!!.any { it.title == "Resume" })
-            assertTrue("Should have stop action", notification.actions!!.any { it.title == "Stop" })
+            assertNotNull("Should have actions", notification?.actions)
+            assertEquals("Should have 2 actions: Resume and Stop", 2, notification?.actions?.size)
+            assertTrue("Should have resume action", notification?.actions?.any { it.title == "Resume" } == true)
+            assertTrue("Should have stop action", notification?.actions?.any { it.title == "Stop" } == true)
         }
 
     @Test
@@ -121,8 +123,8 @@ class NotificationHelperTest {
 
             // Then
             assertNotNull(notification)
-            assertEquals("Break Time", notification.extras.getString("android.title"))
-            assertTrue("Should contain remaining time", notification.extras.getString("android.text")?.contains(remainingTime) == true)
+            assertEquals("Break Time", notification?.extras?.getString("android.title"))
+            assertTrue("Should contain remaining time", notification?.extras?.getString("android.text")?.contains(remainingTime) == true)
         }
 
     @Test
@@ -138,10 +140,10 @@ class NotificationHelperTest {
 
             // Then
             assertNotNull(notification)
-            assertNotNull("Should have actions", notification.actions)
-            assertEquals("Should have 2 actions: Skip and Stop", 2, notification.actions!!.size)
-            assertTrue("Should have skip action", notification.actions!!.any { it.title == "Skip" })
-            assertTrue("Should have stop action", notification.actions!!.any { it.title == "Stop" })
+            assertNotNull("Should have actions", notification?.actions)
+            assertEquals("Should have 2 actions: Skip and Stop", 2, notification?.actions?.size)
+            assertTrue("Should have skip action", notification?.actions?.any { it.title == "Skip" } == true)
+            assertTrue("Should have stop action", notification?.actions?.any { it.title == "Stop" } == true)
         }
 
     @Test
@@ -210,9 +212,9 @@ class NotificationHelperTest {
 
             // Then
             assertNotNull(notification)
-            assertNotNull(notification.actions)
-            assertTrue("Should have pause action", notification.actions.any { it.title == "Pause" })
-            assertTrue("Should have stop action", notification.actions.any { it.title == "Stop" })
+            assertNotNull(notification?.actions)
+            assertTrue("Should have pause action", notification?.actions?.any { it.title == "Pause" } == true)
+            assertTrue("Should have stop action", notification?.actions?.any { it.title == "Stop" } == true)
         }
 
     @Test
@@ -245,7 +247,8 @@ class NotificationHelperTest {
 
             // Then
             assertNotNull(notification)
-            assertTrue("Timer notification should be ongoing", (notification.flags and android.app.Notification.FLAG_ONGOING_EVENT) != 0)
+            assertTrue("Timer notification should be ongoing",
+                (notification?.flags?.and(android.app.Notification.FLAG_ONGOING_EVENT) ?: 0) != 0)
         }
 
     @Test
@@ -260,6 +263,6 @@ class NotificationHelperTest {
 
             // Then
             assertNotNull(notification)
-            assertTrue("Should have small icon", notification.smallIcon != null)
+            assertTrue("Should have small icon", notification?.smallIcon != null)
         }
 }
