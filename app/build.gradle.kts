@@ -135,6 +135,16 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.truth)
     
+    // Testing - Robolectric (for Android framework testing)
+    testImplementation("org.robolectric:robolectric:4.15")
+    
+    // Testing - AndroidX Test (recommended by Robolectric)
+    testImplementation("androidx.test:core:1.5.0")
+    testImplementation("androidx.test.ext:junit:1.1.5")
+    
+    // Testing - WorkManager (for WorkManager initialization in tests)
+    testImplementation("androidx.work:work-testing:2.9.0")
+    
     // Testing - Hilt
     testImplementation(libs.hilt.android.testing)
     kspTest(libs.hilt.compiler)
