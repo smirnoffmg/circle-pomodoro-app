@@ -37,8 +37,7 @@
 # Keep Firebase classes
 -keep class com.google.firebase.** { *; }
 
-# Keep Glance widget classes
--keep class androidx.glance.** { *; }
+
 
 # Keep domain models
 -keep class com.smirnoffmg.pomodorotimer.domain.model.** { *; }

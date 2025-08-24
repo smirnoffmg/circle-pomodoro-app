@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -67,10 +69,6 @@ class MainActivity : AppCompatActivity() {
         
         // Refresh daily statistics when app comes to foreground
         viewModel.loadDailyStatistics()
-        
-        // Force widget update to ensure correct layout
-        com.smirnoffmg.pomodorotimer.widget.CircleTimerWidget
-            .updateAllWidgets(this)
         
         // Reload timer settings to pick up any changes from settings screen
         viewModel.reloadTimerSettings()

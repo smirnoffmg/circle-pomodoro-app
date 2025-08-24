@@ -75,8 +75,7 @@ fun MainTimerScreen(
     val progress by viewModel.progress.collectAsState()
     val dailyStatistics by viewModel.dailyStatistics.collectAsState()
     val showCelebration by viewModel.showCelebration.collectAsState()
-    val showSettingsChangedMessage by viewModel.showSettingsChangedMessage.collectAsState()
-    
+
     val cycleType by viewModel.cycleType.collectAsState()
     val isBreakSession =
         cycleType == TimerForegroundService.CycleType.BREAK || 
@@ -151,11 +150,6 @@ fun MainTimerScreen(
             }
 
             // Settings Changed Message
-            if (showSettingsChangedMessage) {
-                SettingsChangedMessage(
-                    onDismiss = { viewModel.dismissSettingsChangedMessage() }
-                )
-            }
         }
     }
 }
@@ -498,62 +492,6 @@ private fun getTimerColor(
 private fun formatTime(timeInSeconds: Long): String =
     com.smirnoffmg.pomodorotimer.utils.TimeFormatter
         .formatTime(timeInSeconds)
-
-/**
- * Settings changed message overlay - informs user that settings won't affect current timer.
- */
-@Composable
-private fun SettingsChangedMessage(
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .testTag("settings_changed_message"),
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-    ) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "Info",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-                
-                Text(
-                    text = "Settings updated. New timers will use these settings.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
-            IconButton(onClick = onDismiss) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Dismiss",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
 
 /**
  * Get timer state text - minimal, clear indication.

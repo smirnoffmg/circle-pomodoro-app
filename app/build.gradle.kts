@@ -122,9 +122,7 @@ dependencies {
     // DataStore
     implementation(libs.datastore.preferences)
 
-    // Glance (Widgets)
-    implementation(libs.glance.appwidget)
-    implementation(libs.glance.material3)
+
 
     // Testing - Unit Tests
     testImplementation(libs.junit)

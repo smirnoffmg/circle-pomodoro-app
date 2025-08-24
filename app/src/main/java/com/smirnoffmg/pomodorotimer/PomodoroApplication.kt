@@ -12,8 +12,9 @@ import java.util.concurrent.TimeUnit
 class PomodoroApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        setupWorkManager()
         setupNotificationChannels()
+        // TODO: Fix WorkManager Hilt integration
+        // setupWorkManager()
     }
 
     private fun setupNotificationChannels() {

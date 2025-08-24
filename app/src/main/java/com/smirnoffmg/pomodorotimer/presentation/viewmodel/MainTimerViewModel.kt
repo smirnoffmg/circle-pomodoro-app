@@ -31,9 +31,6 @@ class MainTimerViewModel
         private val _showCelebration = MutableStateFlow(false)
         val showCelebration: StateFlow<Boolean> = _showCelebration.asStateFlow()
 
-        private val _showSettingsChangedMessage = MutableStateFlow(false)
-        val showSettingsChangedMessage: StateFlow<Boolean> = _showSettingsChangedMessage.asStateFlow()
-
         init {
             loadDailyStatistics()
         }
@@ -84,19 +81,6 @@ class MainTimerViewModel
             _showCelebration.value = false
         }
 
-        fun showSettingsChangedMessage() {
-            _showSettingsChangedMessage.value = true
-            // Auto-hide after 5 seconds
-            viewModelScope.launch {
-                kotlinx.coroutines.delay(5000)
-                _showSettingsChangedMessage.value = false
-            }
-        }
-
-        fun dismissSettingsChangedMessage() {
-            _showSettingsChangedMessage.value = false
-        }
-
         fun skipBreak() {
             serviceManager.skipBreak()
         }
@@ -108,11 +92,6 @@ class MainTimerViewModel
         fun reloadTimerSettings() {
             // This will trigger the service to reload settings
             serviceManager.reloadSettings()
-            
-            // Show message if timer is running (settings won't affect current session)
-            if (timerState.value == TimerState.RUNNING) {
-                showSettingsChangedMessage()
-            }
         }
 
         override fun onCleared() {

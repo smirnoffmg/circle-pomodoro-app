@@ -19,7 +19,7 @@ A minimalistic Android Pomodoro timer designed to maximize user retention throug
 - ✅ **Visual Countdown** - Large circular progress indicator as primary interface
 - ✅ **Automatic Transitions** - Seamless work/break cycling with notifications
 - ✅ **Session Tracking** - Basic completed pomodoro count with timestamps
-- 🔄 **Home Screen Widget** - 2x1 quick controls without app launch
+
 
 ### Priority 2: Differentiation
 
@@ -43,7 +43,7 @@ A minimalistic Android Pomodoro timer designed to maximize user retention throug
 - **Dependency Injection:** Hilt 2.48
 - **Database:** Room 2.6.1 (local-first)
 - **Background Tasks:** WorkManager 2.9.0 + Foreground Service + AlarmManager
-- **Widgets:** Jetpack Glance 1.0.0
+
 - **Testing:** JUnit 4, Mockito, Turbine, Truth
 
 ## 🚀 Getting Started
@@ -76,7 +76,7 @@ app/src/main/java/com/smirnoffmg/pomodorotimer/
 ├── domain/                 # Business logic
 ├── presentation/           # UI layer (circular design)
 ├── service/               # Timer foreground service
-├── widget/                # Home screen widgets
+
 ├── di/                    # Dependency injection
 └── worker/                # WorkManager workers
 ```

@@ -55,7 +55,7 @@ class TimerForegroundService : Service() {
         private const val SESSIONS_BEFORE_LONG_BREAK = 4
     }
 
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var timerJob: Job? = null
     private var wakeLock: PowerManager.WakeLock? = null
 
@@ -136,6 +136,8 @@ class TimerForegroundService : Service() {
         flags: Int,
         startId: Int
     ): Int {
+        android.util.Log.d("TimerService", "onStartCommand called with action: ${intent?.action}, flags: $flags, startId: $startId")
+        
         when (intent?.action) {
             ACTION_START_TIMER -> {
                 val duration = intent.getLongExtra(EXTRA_DURATION, 0L)
@@ -151,6 +153,18 @@ class TimerForegroundService : Service() {
             ACTION_SET_DURATION -> {
                 val duration = intent.getLongExtra(EXTRA_DURATION, DEFAULT_WORK_DURATION)
                 setTimerDuration(duration)
+            }
+            null -> {
+                android.util.Log.d("TimerService", "Service restarted by system, attempting timer recovery")
+                // Service was restarted by system, try to recover timer state
+                serviceScope.launch {
+                    loadSettings()
+                    // Check if we should resume a running timer
+                    if (_timerState.value == TimerState.RUNNING) {
+                        android.util.Log.d("TimerService", "Resuming timer after service restart")
+                        startCountdown()
+                    }
+                }
             }
         }
         return START_STICKY
@@ -235,21 +249,28 @@ class TimerForegroundService : Service() {
         timerJob =
             serviceScope.launch {
                 var lastHeartbeat = System.currentTimeMillis()
+                val initialRemainingTime = _remainingTime.value
+                val startTime = System.currentTimeMillis()
+                
                 while (_remainingTime.value > 0 && _timerState.value == TimerState.RUNNING) {
-                    delay(1000)
-                    val currentTime = _remainingTime.value
-                    if (currentTime > 0) {
-                        _remainingTime.value = currentTime - 1
+                    val currentTime = System.currentTimeMillis()
+                    val elapsed = (currentTime - startTime) / 1000L
+                    val remaining = (initialRemainingTime - elapsed).coerceAtLeast(0L)
+                    
+                    if (remaining != _remainingTime.value) {
+                        _remainingTime.value = remaining
                         updateProgress()
                         updateNotification()
-                        
-                        // Report heartbeat to redundancy system every 5 seconds
-                        val now = System.currentTimeMillis()
-                        if (now - lastHeartbeat >= 5000L) {
-                            redundancyManager.reportPrimaryTimerHeartbeat(currentTime * 1000L)
-                            lastHeartbeat = now
-                        }
                     }
+                    
+                    // Report heartbeat to redundancy system every 5 seconds
+                    if (currentTime - lastHeartbeat >= 5000L) {
+                        redundancyManager.reportPrimaryTimerHeartbeat(remaining * 1000L)
+                        lastHeartbeat = currentTime
+                    }
+                    
+                    // Sleep for a shorter interval to be more responsive
+                    delay(500)
                 }
                 if (_remainingTime.value <= 0) {
                     onTimerComplete()
@@ -533,13 +554,6 @@ class TimerForegroundService : Service() {
                 stopForeground(true)
             }
         }
-        
-        // Update widget (simplified)
-        com.smirnoffmg.pomodorotimer.widget.CircleTimerWidget.updateTimerDisplay(
-            this,
-            _remainingTime.value,
-            _timerState.value == TimerState.RUNNING
-        )
     }
 
     private fun showBreakStartNotification() {
