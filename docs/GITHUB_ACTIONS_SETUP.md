@@ -60,29 +60,49 @@ Set the secrets:
 
 ## Workflow Triggers
 
-- **Pull Requests**: Runs CI job (lint, test, debug build)
-- **Push to main**: Runs CI job + release build
-- **Manual trigger**: Runs CI job + selected build type
+- **Pull Requests**: Runs tests and debug build
+- **Push to main**: Runs tests, release APK, and release AAB
+- **Manual trigger**: Runs selected build type
   - `debug`: Debug APK only
-  - `release`: Unsigned release APK
-  - `signed-release`: Signed release APK
+  - `release`: Release APK and AAB (unsigned)
+  - `signed-release`: Signed release APK and AAB
+  - `all`: All build types (debug, release, signed)
 
 ## Build Outputs
+
+The workflow generates the following artifacts with date-based naming:
 
 ### Debug APK
 - **Path**: `app/build/outputs/apk/debug/app-debug.apk`
 - **Retention**: 30 days
 - **Signing**: Debug keystore
+- **Naming**: `YYYY-MM-DD - RepositoryName - Debug APK`
 
 ### Release APK (Unsigned)
 - **Path**: `app/build/outputs/apk/release/app-release.apk`
 - **Retention**: 90 days
 - **Signing**: Debug keystore (for testing)
+- **Naming**: `YYYY-MM-DD - RepositoryName - Release APK`
+
+### Release AAB (Unsigned)
+- **Path**: `app/build/outputs/bundle/release/app-release.aab`
+- **Retention**: 90 days
+- **Signing**: Debug keystore (for testing)
+- **Naming**: `YYYY-MM-DD - RepositoryName - Release AAB`
+- **Usage**: Android App Bundle for Play Store
 
 ### Release APK (Signed)
 - **Path**: `app/build/outputs/apk/release/app-release.apk`
 - **Retention**: 90 days
 - **Signing**: Release keystore
+- **Naming**: `YYYY-MM-DD - RepositoryName - Signed Release APK`
+
+### Release AAB (Signed)
+- **Path**: `app/build/outputs/bundle/release/app-release.aab`
+- **Retention**: 90 days
+- **Signing**: Release keystore
+- **Naming**: `YYYY-MM-DD - RepositoryName - Signed Release AAB`
+- **Usage**: Production App Bundle for Play Store
 
 ## Manual Release Build
 

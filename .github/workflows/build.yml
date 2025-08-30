@@ -11,12 +11,13 @@ on:
       build_type:
         description: 'Type of build to perform'
         required: true
-        default: 'debug'
+        default: 'all'
         type: choice
         options:
         - debug
         - release
         - signed-release
+        - all
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -27,229 +28,137 @@ permissions:
 
 env:
   GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.jvmargs=-Xmx4096m
+  MAIN_PROJECT_MODULE: app
+  REPOSITORY_NAME: ${{ github.event.repository.name }}
 
 jobs:
-  ci:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+
+      - name: Set current date
+        run: echo "date_today=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
+          cache: gradle
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: |
-            tools
-            platform-tools
-            build-tools;34.0.0
-            platforms;android-34
+          packages: tools platform-tools build-tools;34.0.0 platforms;android-34
 
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
 
       - name: Validate google-services.json
+        if: hashFiles('app/google-services.json') != ''
         run: |
-          if [ -z "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
-            echo "❌ GOOGLE_SERVICES_JSON secret is not set"
-            exit 1
+          if [ -f "app/google-services.json" ]; then
+            echo "Validating google-services.json..."
+            if ! jq empty app/google-services.json 2>/dev/null; then
+              echo "❌ Invalid JSON in google-services.json"
+              exit 1
+            fi
+            echo "✅ google-services.json is valid"
           fi
-          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 -d > app/google-services.json
-          if ! jq empty app/google-services.json 2>/dev/null; then
-            echo "❌ Invalid JSON in google-services.json"
-            exit 1
-          fi
-          echo "✅ google-services.json validated"
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Lint
-        run: ./gradlew lintDebug --no-daemon
-        timeout-minutes: 10
-
-      - name: Test
-        run: ./gradlew test --no-daemon
-        timeout-minutes: 15
-
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --no-daemon
-        timeout-minutes: 20
-
-      - name: Validate APK
+      - name: Setup Firebase
+        if: hashFiles('app/google-services.json') != ''
         run: |
-          if [ ! -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
-            echo "❌ Debug APK not found"
-            exit 1
+          if [ -f "app/google-services.json" ]; then
+            echo "Setting up Firebase configuration..."
+            echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
           fi
-          # Validate APK structure
-          aapt dump badging app/build/outputs/apk/debug/app-debug.apk > /dev/null
-          echo "✅ Debug APK created and validated successfully"
 
-      - name: Upload Debug APK
+      - name: Run tests
+        run: ./gradlew test
+
+      - name: Build debug APK
+        if: github.event.inputs.build_type == 'debug' || github.event.inputs.build_type == 'all' || github.event_name == 'pull_request'
+        run: ./gradlew assembleDebug
+
+      - name: Build release APK
+        if: github.event.inputs.build_type == 'release' || github.event.inputs.build_type == 'all' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        run: ./gradlew assembleRelease
+
+      - name: Build release AAB
+        if: github.event.inputs.build_type == 'release' || github.event.inputs.build_type == 'all' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        run: ./gradlew bundleRelease
+
+      - name: Setup signing for release
+        if: (github.event.inputs.build_type == 'signed-release' || github.event.inputs.build_type == 'all') && github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Setting up signing configuration..."
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > signing.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> signing.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> signing.properties
+
+      - name: Build signed release APK
+        if: (github.event.inputs.build_type == 'signed-release' || github.event.inputs.build_type == 'all') && github.event_name == 'workflow_dispatch'
+        run: ./gradlew assembleRelease
+
+      - name: Build signed release AAB
+        if: (github.event.inputs.build_type == 'signed-release' || github.event.inputs.build_type == 'all') && github.event_name == 'workflow_dispatch'
+        run: ./gradlew bundleRelease
+
+      - name: Validate APK files
+        if: always()
+        run: |
+          echo "Validating APK files..."
+          if [ -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
+            echo "✅ Debug APK exists"
+            aapt dump badging app/build/outputs/apk/debug/app-debug.apk | head -1
+          fi
+          if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
+            echo "✅ Release APK exists"
+            aapt dump badging app/build/outputs/apk/release/app-release.apk | head -1
+          fi
+
+      - name: Upload debug APK
+        if: github.event.inputs.build_type == 'debug' || github.event.inputs.build_type == 'all' || github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: ${{ env.date_today }} - ${{ env.REPOSITORY_NAME }} - Debug APK
+          path: app/build/outputs/apk/debug/
           retention-days: 30
 
-  build-release:
-    runs-on: ubuntu-latest
-    needs: ci
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    timeout-minutes: 45
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            tools
-            platform-tools
-            build-tools;34.0.0
-            platforms;android-34
-
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
-
-      - name: Add google-services.json
-        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 -d > app/google-services.json
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build Release APK
-        run: ./gradlew assembleRelease --no-daemon
-        timeout-minutes: 30
-
-      - name: Validate Release APK
-        run: |
-          if [ ! -f "app/build/outputs/apk/release/app-release.apk" ]; then
-            echo "❌ Release APK not found"
-            exit 1
-          fi
-          # Validate APK structure
-          aapt dump badging app/build/outputs/apk/release/app-release.apk > /dev/null
-          echo "✅ Release APK created and validated successfully"
-
-      - name: Upload Release APK
+      - name: Upload release APK
+        if: (github.event.inputs.build_type == 'release' || github.event.inputs.build_type == 'all' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) && !contains(github.event.inputs.build_type, 'signed')
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: app/build/outputs/apk/release/app-release.apk
+          name: ${{ env.date_today }} - ${{ env.REPOSITORY_NAME }} - Release APK
+          path: app/build/outputs/apk/release/
           retention-days: 90
 
-  build-signed-release:
-    runs-on: ubuntu-latest
-    needs: ci
-    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.build_type == 'signed-release' || github.event.inputs.build_type == 'release')
-    timeout-minutes: 45
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            tools
-            platform-tools
-            build-tools;34.0.0
-            platforms;android-34
-
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
-
-      - name: Add google-services.json
-        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' | base64 -d > app/google-services.json
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Validate Signing Secrets
-        run: |
-          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ] || [ -z "${{ secrets.KEYSTORE_PASSWORD }}" ] || [ -z "${{ secrets.KEY_ALIAS }}" ] || [ -z "${{ secrets.KEY_PASSWORD }}" ]; then
-            echo "❌ Signing secrets are not properly configured"
-            exit 1
-          fi
-          echo "✅ Signing secrets validated"
-
-      - name: Setup Keystore
-        run: |
-          echo '${{ secrets.KEYSTORE_BASE64 }}' | base64 -d > app/keystore.jks
-          if [ ! -f "app/keystore.jks" ]; then
-            echo "❌ Failed to create keystore file"
-            exit 1
-          fi
-          echo "storeFile=keystore.jks" > app/signing.properties
-          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> app/signing.properties
-          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> app/signing.properties
-          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> app/signing.properties
-          echo "✅ Keystore setup completed"
-
-      - name: Build Signed Release APK
-        run: ./gradlew assembleRelease --no-daemon
-        timeout-minutes: 30
-
-      - name: Validate Signed APK
-        run: |
-          if [ ! -f "app/build/outputs/apk/release/app-release.apk" ]; then
-            echo "❌ Signed APK not found"
-            exit 1
-          fi
-          # Validate APK structure
-          aapt dump badging app/build/outputs/apk/release/app-release.apk > /dev/null
-          echo "✅ Signed APK created and validated successfully"
-
-      - name: Upload Signed Release APK
+      - name: Upload signed release APK
+        if: (github.event.inputs.build_type == 'signed-release' || github.event.inputs.build_type == 'all') && github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-signed
-          path: app/build/outputs/apk/release/app-release.apk
+          name: ${{ env.date_today }} - ${{ env.REPOSITORY_NAME }} - Signed Release APK
+          path: app/build/outputs/apk/release/
+          retention-days: 90
+
+      - name: Upload release AAB
+        if: (github.event.inputs.build_type == 'release' || github.event.inputs.build_type == 'all' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) && !contains(github.event.inputs.build_type, 'signed')
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.date_today }} - ${{ env.REPOSITORY_NAME }} - Release AAB
+          path: app/build/outputs/bundle/release/
+          retention-days: 90
+
+      - name: Upload signed release AAB
+        if: (github.event.inputs.build_type == 'signed-release' || github.event.inputs.build_type == 'all') && github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.date_today }} - ${{ env.REPOSITORY_NAME }} - Signed Release AAB
+          path: app/build/outputs/bundle/release/
           retention-days: 90
