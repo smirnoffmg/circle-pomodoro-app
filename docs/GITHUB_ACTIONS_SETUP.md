@@ -108,6 +108,13 @@ The workflow generates the following artifacts with date-based naming:
 - **Naming**: `YYYY-MM-DD - RepositoryName - Signed Release AAB`
 - **Usage**: Production App Bundle for Play Store
 
+### GitHub Release (Signed builds only)
+- **Trigger**: Manual workflow with `signed-release` or `all` build type
+- **Location**: GitHub Releases page
+- **Assets**: Signed APK and AAB files
+- **Tag**: `vYYYY-MM-DD` format
+- **Description**: Automated release notes with download links
+
 ## Manual Release Build
 
 To create a release APK:
@@ -124,6 +131,8 @@ To create a release APK:
 7. Click "Run workflow"
 
 The APK will be available as an artifact once the workflow completes.
+
+**For signed releases**: A GitHub Release will also be created with downloadable APK and AAB files.
 
 ## Local Development
 
@@ -147,6 +156,7 @@ For local development, you can build APKs using:
 - Verify `GOOGLE_SERVICES_JSON` secret is correctly encoded and set
 - Ensure keystore passwords match
 - Verify Firebase project configuration is correct
+- Check that APK/AAB files are generated with reasonable file sizes
 
 ### Signing Issues
 - Verify keystore file is properly encoded
@@ -165,7 +175,7 @@ For local development, you can build APKs using:
 - ✅ Input validation for all secrets
 - ✅ JSON validation for google-services.json
 - ✅ Keystore file integrity checks
-- ✅ APK output validation using `aapt`
+- ✅ APK output validation using file size checks
 - ✅ Minimal permissions (read-only for contents)
 - ✅ Timeout protection for long-running tasks
 - ✅ APK structure validation before upload

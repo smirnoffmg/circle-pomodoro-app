@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.jvmargs=-Xmx4096m
@@ -58,6 +58,11 @@ jobs:
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
       - name: Setup Firebase
         run: |
           echo "Setting up Firebase configuration..."
@@ -65,8 +70,8 @@ jobs:
             echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
             echo "✅ Firebase configuration set up successfully"
           else
-            echo "⚠️  GOOGLE_SERVICES_JSON secret not found, creating empty google-services.json"
-            echo '{"project_info":{"project_id":"test-project"}}' > app/google-services.json
+            echo "⚠️  GOOGLE_SERVICES_JSON secret not found, creating minimal google-services.json"
+            echo '{"project_info":{"project_id":"test-project"},"client":[]}' > app/google-services.json
           fi
 
       - name: Validate google-services.json
@@ -84,19 +89,19 @@ jobs:
           fi
 
       - name: Run tests
-        run: ./gradlew test
+        run: ./gradlew test --no-daemon --stacktrace
 
       - name: Build debug APK
         if: github.event.inputs.build_type == 'debug' || github.event.inputs.build_type == 'all' || github.event_name == 'pull_request'
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Build release APK
         if: github.event.inputs.build_type == 'release' || github.event.inputs.build_type == 'all' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
 
       - name: Build release AAB
         if: github.event.inputs.build_type == 'release' || github.event.inputs.build_type == 'all' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-        run: ./gradlew bundleRelease
+        run: ./gradlew bundleRelease --no-daemon --stacktrace
 
       - name: Setup signing for release
         if: (github.event.inputs.build_type == 'signed-release' || github.event.inputs.build_type == 'all') && github.event_name == 'workflow_dispatch'
@@ -109,11 +114,11 @@ jobs:
 
       - name: Build signed release APK
         if: (github.event.inputs.build_type == 'signed-release' || github.event.inputs.build_type == 'all') && github.event_name == 'workflow_dispatch'
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
 
       - name: Build signed release AAB
         if: (github.event.inputs.build_type == 'signed-release' || github.event.inputs.build_type == 'all') && github.event_name == 'workflow_dispatch'
-        run: ./gradlew bundleRelease
+        run: ./gradlew bundleRelease --no-daemon --stacktrace
 
       - name: Validate APK files
         if: always()
@@ -121,11 +126,15 @@ jobs:
           echo "Validating APK files..."
           if [ -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
             echo "✅ Debug APK exists"
-            aapt dump badging app/build/outputs/apk/debug/app-debug.apk | head -1
+            echo "   Size: $(ls -lh app/build/outputs/apk/debug/app-debug.apk | awk '{print $5}')"
           fi
           if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
             echo "✅ Release APK exists"
-            aapt dump badging app/build/outputs/apk/release/app-release.apk | head -1
+            echo "   Size: $(ls -lh app/build/outputs/apk/release/app-release.apk | awk '{print $5}')"
+          fi
+          if [ -f "app/build/outputs/bundle/release/app-release.aab" ]; then
+            echo "✅ Release AAB exists"
+            echo "   Size: $(ls -lh app/build/outputs/bundle/release/app-release.aab | awk '{print $5}')"
           fi
 
       - name: Upload debug APK
@@ -137,7 +146,7 @@ jobs:
           retention-days: 30
 
       - name: Upload release APK
-        if: (github.event.inputs.build_type == 'release' || github.event.inputs.build_type == 'all' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) && !contains(github.event.inputs.build_type, 'signed')
+        if: (github.event.inputs.build_type == 'release' || github.event.inputs.build_type == 'all' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) && github.event.inputs.build_type != 'signed-release'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.date_today }} - ${{ env.REPOSITORY_NAME }} - Release APK
@@ -153,7 +162,7 @@ jobs:
           retention-days: 90
 
       - name: Upload release AAB
-        if: (github.event.inputs.build_type == 'release' || github.event.inputs.build_type == 'all' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) && !contains(github.event.inputs.build_type, 'signed')
+        if: (github.event.inputs.build_type == 'release' || github.event.inputs.build_type == 'all' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) && github.event.inputs.build_type != 'signed-release'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.date_today }} - ${{ env.REPOSITORY_NAME }} - Release AAB
@@ -167,3 +176,42 @@ jobs:
           name: ${{ env.date_today }} - ${{ env.REPOSITORY_NAME }} - Signed Release AAB
           path: app/build/outputs/bundle/release/
           retention-days: 90
+
+      - name: Get version info
+        if: (github.event.inputs.build_type == 'signed-release' || github.event.inputs.build_type == 'all') && github.event_name == 'workflow_dispatch'
+        id: version
+        run: |
+          VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | sed 's/.*versionName = "\(.*\)"/\1/')
+          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | sed 's/.*versionCode = \([0-9]*\)/\1/')
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "✅ Version: $VERSION_NAME ($VERSION_CODE)"
+
+      - name: Generate release notes
+        if: (github.event.inputs.build_type == 'signed-release' || github.event.inputs.build_type == 'all') && github.event_name == 'workflow_dispatch'
+        id: release_notes
+        run: |
+          cat > release_notes.md << EOF
+          **Version:** ${{ steps.version.outputs.version_name }} (${{ steps.version.outputs.version_code }})
+          **APK:** \$(ls -lh app/build/outputs/apk/release/app-release.apk | awk '{print \$5}')
+          **AAB:** \$(ls -lh app/build/outputs/bundle/release/app-release.aab | awk '{print \$5}')
+          **Commit:** \`${{ github.sha }}\`
+          EOF
+          
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          cat release_notes.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        if: (github.event.inputs.build_type == 'signed-release' || github.event.inputs.build_type == 'all') && github.event_name == 'workflow_dispatch'
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version_name }}
+          name: Release v${{ steps.version.outputs.version_name }} (${{ env.date_today }})
+          body: ${{ steps.release_notes.outputs.notes }}
+          draft: false
+          prerelease: false
+          files: |
+            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/bundle/release/app-release.aab
