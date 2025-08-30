@@ -15,7 +15,7 @@ The GitHub Actions workflow provides three build scenarios:
 Add these secrets to your GitHub repository (Settings > Secrets and variables > Actions):
 
 ### Firebase Configuration
-- `GOOGLE_SERVICES_JSON`: Base64 encoded content of your `google-services.json` file
+- `GOOGLE_SERVICES_JSON`: Base64 encoded content of your `google-services.json` file (required for tests and builds)
 
 ### Signing Configuration (for signed releases)
 - `KEYSTORE_BASE64`: Base64 encoded keystore file
@@ -27,6 +27,8 @@ Add these secrets to your GitHub repository (Settings > Secrets and variables > 
 
 ### 1. Firebase Configuration
 
+**Required for all builds and tests**
+
 ```bash
 # Encode your google-services.json file
 base64 -i app/google-services.json | pbcopy  # macOS
@@ -37,6 +39,8 @@ base64 -i app/google-services.json | xclip -selection clipboard  # Linux
 ```
 
 Paste the output as the `GOOGLE_SERVICES_JSON` secret.
+
+**Note**: This secret is required for both tests and builds. If not provided, the workflow will create a minimal google-services.json file for testing purposes, but this may cause issues with Firebase features.
 
 ### 2. Keystore for Signing
 
@@ -140,8 +144,9 @@ For local development, you can build APKs using:
 
 ### Build Failures
 - Check that all secrets are properly set
-- Verify `google-services.json` is correctly encoded
+- Verify `GOOGLE_SERVICES_JSON` secret is correctly encoded and set
 - Ensure keystore passwords match
+- Verify Firebase project configuration is correct
 
 ### Signing Issues
 - Verify keystore file is properly encoded

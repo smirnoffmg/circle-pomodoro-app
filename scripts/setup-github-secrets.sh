@@ -1,30 +1,29 @@
 #!/bin/bash
 
-# GitHub Actions Secrets Setup Script
-# This script helps encode files for GitHub Secrets
+# GitHub Actions Secrets Setup Script for Pomodoro Timer
+# This script helps you encode and prepare secrets for GitHub Actions
 
 set -e
 
-echo "🔧 GitHub Actions Secrets Setup"
-echo "================================"
+echo "🔧 GitHub Actions Secrets Setup for Pomodoro Timer"
+echo "=================================================="
 
 # Check if google-services.json exists
-if [ -f "app/google-services.json" ]; then
-    echo "📱 Found google-services.json"
-    echo "Encoding for GOOGLE_SERVICES_JSON secret..."
-    
-    # Store the encoded value
-    GOOGLE_SERVICES_ENCODED=$(base64 -i app/google-services.json)
-    
-    echo "✅ google-services.json encoded"
-    echo "   Copy this as the GOOGLE_SERVICES_JSON secret in GitHub:"
-    echo "----------------------------------------"
-    echo "$GOOGLE_SERVICES_ENCODED"
-    echo "----------------------------------------"
-else
-    echo "❌ google-services.json not found in app/ directory"
-    echo "   Please ensure the file exists before running this script"
+if [ ! -f "app/google-services.json" ]; then
+    echo "❌ Error: app/google-services.json not found!"
+    echo "Please ensure you have the google-services.json file in the app/ directory."
+    exit 1
 fi
+
+echo ""
+echo "📋 Required GitHub Secrets:"
+echo "=========================="
+
+# Encode google-services.json
+echo "1. GOOGLE_SERVICES_JSON:"
+GOOGLE_SERVICES_BASE64=$(base64 -i app/google-services.json)
+echo "$GOOGLE_SERVICES_BASE64"
+echo ""
 
 echo ""
 echo "🔐 Keystore Setup (Optional)"
@@ -98,28 +97,45 @@ else
     echo "keytool -genkey -v -keystore my-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-key-alias"
 fi
 
+# Check if keystore exists (either created above or already present)
+if [ -f "my-release-key.jks" ]; then
+    echo ""
+    echo "🔐 Existing Keystore Found"
+    echo "=========================="
+    echo "2. KEYSTORE_BASE64:"
+    KEYSTORE_BASE64=$(base64 -i my-release-key.jks)
+    echo "$KEYSTORE_BASE64"
+    echo ""
+    echo "3. Additional keystore secrets (set these manually):"
+    echo "   - KEYSTORE_PASSWORD: Your keystore password"
+    echo "   - KEY_ALIAS: Your key alias (e.g., 'my-key-alias')"
+    echo "   - KEY_PASSWORD: Your key password"
+fi
+
 echo ""
-echo "🎉 Setup complete!"
-echo "Next steps:"
+echo "📝 Instructions:"
+echo "==============="
 echo "1. Go to your GitHub repository"
 echo "2. Navigate to Settings > Secrets and variables > Actions"
-echo "3. Add the secrets mentioned above"
-echo "4. Push to main or create a PR to trigger the workflow"
-
+echo "3. Add the secrets above with their corresponding values"
+echo "4. For GOOGLE_SERVICES_JSON, paste the base64 encoded string"
+echo "5. For keystore secrets, enter the actual passwords/aliases"
+echo ""
+echo "🎉 Setup complete! Your GitHub Actions workflow should now work properly."
 echo ""
 echo "📋 Summary of Required Secrets:"
 echo "================================"
-if [ -f "app/google-services.json" ]; then
-    echo "✅ GOOGLE_SERVICES_JSON: [see above]"
-else
-    echo "❌ GOOGLE_SERVICES_JSON: Missing google-services.json file"
-fi
+echo "✅ GOOGLE_SERVICES_JSON: [see above]"
 
-if [[ $REPLY =~ ^[Yy]$ ]] && [ -f "my-release-key.jks" ]; then
+if [ -f "my-release-key.jks" ]; then
     echo "✅ KEYSTORE_BASE64: [see above]"
-    echo "✅ KEYSTORE_PASSWORD: $KEYSTORE_PASSWORD"
-    echo "✅ KEY_ALIAS: $KEY_ALIAS"
-    echo "✅ KEY_PASSWORD: $KEY_PASSWORD"
+    if [ -n "$KEYSTORE_PASSWORD" ]; then
+        echo "✅ KEYSTORE_PASSWORD: $KEYSTORE_PASSWORD"
+        echo "✅ KEY_ALIAS: $KEY_ALIAS"
+        echo "✅ KEY_PASSWORD: $KEY_PASSWORD"
+    else
+        echo "⚠️  Signing secrets: Set manually (KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD)"
+    fi
 else
     echo "⚠️  Signing secrets: Not configured (optional for debug builds)"
 fi
