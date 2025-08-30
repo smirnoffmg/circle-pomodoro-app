@@ -68,6 +68,14 @@ cd circle-pomodoro
 ./gradlew check                   # All tests
 ```
 
+### CI/CD
+The project uses GitHub Actions for automated builds and testing. See [GitHub Actions Setup](docs/GITHUB_ACTIONS_SETUP.md) for detailed configuration.
+
+```bash
+# Setup GitHub Actions secrets
+./scripts/setup-github-secrets.sh
+```
+
 ## 📁 Project Structure
 
 ```

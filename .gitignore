@@ -110,6 +110,7 @@ Temporary Items
 # AI
 .claude/
 CLAUDE.md
+.cursor/
 
 # Java class files
 
