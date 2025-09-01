@@ -53,6 +53,13 @@ class MainTimerViewModel
 
         fun isServiceRunning(): Boolean = serviceManager.isServiceRunning()
 
+        // Fix: Method to reconnect to running service when app is resumed
+        fun reconnectToServiceIfRunning() {
+            if (!serviceManager.isServiceRunning()) {
+                serviceManager.bindServiceIfRunning()
+            }
+        }
+
         fun loadDailyStatistics() {
             viewModelScope.launch {
                 try {

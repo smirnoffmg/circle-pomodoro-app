@@ -67,6 +67,9 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         analyticsHelper.logScreenView("MainTimerScreen")
         
+        // Fix: Automatically reconnect to running service when app is resumed
+        viewModel.reconnectToServiceIfRunning()
+        
         // Refresh daily statistics when app comes to foreground
         viewModel.loadDailyStatistics()
         

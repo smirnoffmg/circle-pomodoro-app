@@ -129,10 +129,21 @@ class TimerServiceManager
 
         fun isServiceRunning(): Boolean = isBound && service != null
 
-        private fun bindService() {
+        // Fix: Improved binding logic that handles reconnection to running service
+        fun bindService() {
             if (!isBound) {
                 val intent = Intent(context, TimerForegroundService::class.java)
                 context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+            }
+        }
+
+        // Fix: Enhanced binding that checks if service is already running
+        fun bindServiceIfRunning() {
+            if (!isBound) {
+                // Check if service is already running before binding
+                if (ServiceUtils.isServiceRunning(context, TimerForegroundService::class.java)) {
+                    bindService()
+                }
             }
         }
 
@@ -165,22 +176,32 @@ class TimerServiceManager
             }
         }
 
+        // Fix: Enhanced state synchronization with proper error handling
         private fun syncStateWithService() {
             service?.let { serviceInstance ->
-                // Cancel previous flow collections to prevent memory leaks
-                cancelFlowCollections()
+                try {
+                    // Cancel previous flow collections to prevent memory leaks
+                    cancelFlowCollections()
+                    
+                    // Update local state flows with current service state
+                    _timerState.value = serviceInstance.timerState.value
+                    _remainingTime.value = serviceInstance.remainingTime.value
+                    _progress.value = serviceInstance.progress.value
+                    _cycleType.value = serviceInstance.cycleType.value
                 
-                // Update local state flows with current service state
-                _timerState.value = serviceInstance.timerState.value
-                _remainingTime.value = serviceInstance.remainingTime.value
-                _progress.value = serviceInstance.progress.value
-                _cycleType.value = serviceInstance.cycleType.value
-            
-                // Set up continuous sync with proper job tracking
-                timerStateJob = serviceInstance.timerState.onEach { _timerState.value = it }.launchIn(scope)
-                remainingTimeJob = serviceInstance.remainingTime.onEach { _remainingTime.value = it }.launchIn(scope)
-                progressJob = serviceInstance.progress.onEach { _progress.value = it }.launchIn(scope)
-                cycleTypeJob = serviceInstance.cycleType.onEach { _cycleType.value = it }.launchIn(scope)
+                    // Set up continuous sync with proper job tracking
+                    timerStateJob = serviceInstance.timerState.onEach { _timerState.value = it }.launchIn(scope)
+                    remainingTimeJob = serviceInstance.remainingTime.onEach { _remainingTime.value = it }.launchIn(scope)
+                    progressJob = serviceInstance.progress.onEach { _progress.value = it }.launchIn(scope)
+                    cycleTypeJob = serviceInstance.cycleType.onEach { _cycleType.value = it }.launchIn(scope)
+                    
+                    android.util.Log.d("TimerServiceManager", "Successfully synced state with service: timerState=${_timerState.value}, remainingTime=${_remainingTime.value}")
+                } catch (e: Exception) {
+                    android.util.Log.e("TimerServiceManager", "Failed to sync state with service", e)
+                    // Fallback: try to bind again
+                    unbindService()
+                    bindService()
+                }
             }
         }
 

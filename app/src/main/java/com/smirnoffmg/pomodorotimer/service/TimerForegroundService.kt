@@ -156,13 +156,20 @@ class TimerForegroundService : Service() {
             }
             null -> {
                 android.util.Log.d("TimerService", "Service restarted by system, attempting timer recovery")
-                // Service was restarted by system, try to recover timer state
+                // Fix: Improved service restart logic with better state recovery
                 serviceScope.launch {
                     loadSettings()
                     // Check if we should resume a running timer
                     if (_timerState.value == TimerState.RUNNING) {
                         android.util.Log.d("TimerService", "Resuming timer after service restart")
+                        // Ensure the timer is properly running and update notification
                         startCountdown()
+                        updateNotification()
+                        // Restart redundancy system
+                        redundancyManager.startTimer(_remainingTime.value * 1000L)
+                    } else if (_timerState.value == TimerState.PAUSED) {
+                        android.util.Log.d("TimerService", "Service restarted with paused timer, updating notification")
+                        updateNotification()
                     }
                 }
             }
@@ -595,4 +602,16 @@ class TimerForegroundService : Service() {
     private fun formatTime(timeInSeconds: Long): String =
         com.smirnoffmg.pomodorotimer.utils.TimeFormatter
             .formatTime(timeInSeconds)
+
+    // Fix: Method to get current timer state for better UI synchronization
+    fun getCurrentTimerState(): Map<String, Any> {
+        return mapOf(
+            "timerState" to _timerState.value,
+            "remainingTime" to _remainingTime.value,
+            "progress" to _progress.value,
+            "cycleType" to _cycleType.value,
+            "initialDuration" to initialDuration,
+            "completedSessions" to completedSessions
+        )
+    }
 }

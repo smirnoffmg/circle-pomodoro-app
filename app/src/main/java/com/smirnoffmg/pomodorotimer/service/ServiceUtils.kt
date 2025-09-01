@@ -1,5 +1,6 @@
 package com.smirnoffmg.pomodorotimer.service
 
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -47,6 +48,22 @@ object ServiceUtils {
             context.startForegroundService(intent)
         } else {
             context.startService(intent)
+        }
+    }
+
+    /**
+     * Check if a service is currently running
+     * 
+     * @param context The application context
+     * @param serviceClass The service class to check
+     * @return true if the service is running, false otherwise
+     */
+    fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val runningServices = activityManager.getRunningServices(Integer.MAX_VALUE)
+        
+        return runningServices.any { serviceInfo ->
+            serviceInfo.service.className == serviceClass.name
         }
     }
 }
