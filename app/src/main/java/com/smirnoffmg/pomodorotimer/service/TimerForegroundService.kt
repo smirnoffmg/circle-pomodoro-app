@@ -604,8 +604,8 @@ class TimerForegroundService : Service() {
             .formatTime(timeInSeconds)
 
     // Fix: Method to get current timer state for better UI synchronization
-    fun getCurrentTimerState(): Map<String, Any> {
-        return mapOf(
+    fun getCurrentTimerState(): Map<String, Any> =
+        mapOf(
             "timerState" to _timerState.value,
             "remainingTime" to _remainingTime.value,
             "progress" to _progress.value,
@@ -613,5 +613,4 @@ class TimerForegroundService : Service() {
             "initialDuration" to initialDuration,
             "completedSessions" to completedSessions
         )
-    }
 }

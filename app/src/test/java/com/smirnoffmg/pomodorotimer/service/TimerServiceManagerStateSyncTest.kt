@@ -8,7 +8,6 @@ import org.junit.Test
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class TimerServiceManagerStateSyncTest : BaseUnitTest() {
-    
     @Test
     fun `initial state should be STOPPED`() {
         // Given: Service manager initial state expectations
@@ -21,7 +20,7 @@ class TimerServiceManagerStateSyncTest : BaseUnitTest() {
         assertThat(expectedInitialTime).isEqualTo(1500L)
         assertThat(expectedInitialProgress).isEqualTo(1f)
     }
-    
+
     @Test
     fun `timer state transitions should work correctly`() {
         // Given: Timer state transitions
@@ -39,7 +38,7 @@ class TimerServiceManagerStateSyncTest : BaseUnitTest() {
         assertThat(runningState).isIn(listOf(TimerState.STOPPED, TimerState.RUNNING, TimerState.PAUSED))
         assertThat(pausedState).isIn(listOf(TimerState.STOPPED, TimerState.RUNNING, TimerState.PAUSED))
     }
-    
+
     @Test
     fun `timer duration calculations should be correct`() {
         // Given: Timer duration expectations
@@ -56,7 +55,7 @@ class TimerServiceManagerStateSyncTest : BaseUnitTest() {
         assertThat(minutes).isEqualTo(25L)
         assertThat(seconds).isEqualTo(0L)
     }
-    
+
     @Test
     fun `progress calculation should work correctly`() {
         // Given: Progress calculation test case
