@@ -194,8 +194,6 @@ class TimerServiceManager
                     remainingTimeJob = serviceInstance.remainingTime.onEach { _remainingTime.value = it }.launchIn(scope)
                     progressJob = serviceInstance.progress.onEach { _progress.value = it }.launchIn(scope)
                     cycleTypeJob = serviceInstance.cycleType.onEach { _cycleType.value = it }.launchIn(scope)
-                    
-                    android.util.Log.d("TimerServiceManager", "Successfully synced state with service: timerState=${_timerState.value}, remainingTime=${_remainingTime.value}")
                 } catch (e: Exception) {
                     android.util.Log.e("TimerServiceManager", "Failed to sync state with service", e)
                     // Fallback: try to bind again
