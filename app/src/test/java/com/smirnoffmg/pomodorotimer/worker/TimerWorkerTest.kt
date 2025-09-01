@@ -22,7 +22,7 @@ class TimerWorkerTest {
                 startTime = System.currentTimeMillis(),
                 endTime = null,
                 isCompleted = false,
-                type = SessionType.WORK
+                type = SessionType.WORK,
             )
 
         // Then
@@ -54,7 +54,7 @@ class TimerWorkerTest {
                 startTime = System.currentTimeMillis(),
                 endTime = null,
                 isCompleted = false,
-                type = SessionType.WORK
+                type = SessionType.WORK,
             )
         val afterTimestamp = System.currentTimeMillis()
 

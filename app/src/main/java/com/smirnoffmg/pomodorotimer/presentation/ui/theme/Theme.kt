@@ -94,10 +94,10 @@ private val DarkColorScheme =
  * Supports dynamic colors on Android 12+ and provides fallback themes.
  */
 @Composable
-fun PomodoroTimerTheme(
+fun pomodoroTimerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val colorScheme =
         when {
@@ -109,7 +109,7 @@ fun PomodoroTimerTheme(
             else -> LightColorScheme
         }
     val view = LocalView.current
-    
+
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
@@ -121,6 +121,6 @@ fun PomodoroTimerTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
-        content = content
+        content = content,
     )
 }

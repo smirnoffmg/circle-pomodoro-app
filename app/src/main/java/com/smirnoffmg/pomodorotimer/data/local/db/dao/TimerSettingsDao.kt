@@ -25,25 +25,25 @@ interface TimerSettingsDao {
     @Query("UPDATE timer_settings SET workDurationMinutes = :workDuration, updatedAt = :timestamp WHERE id = 1")
     suspend fun updateWorkDuration(
         workDuration: Int,
-        timestamp: Long = System.currentTimeMillis()
+        timestamp: Long = System.currentTimeMillis(),
     )
 
     @Query("UPDATE timer_settings SET shortBreakDurationMinutes = :shortBreakDuration, updatedAt = :timestamp WHERE id = 1")
     suspend fun updateShortBreakDuration(
         shortBreakDuration: Int,
-        timestamp: Long = System.currentTimeMillis()
+        timestamp: Long = System.currentTimeMillis(),
     )
 
     @Query("UPDATE timer_settings SET longBreakDurationMinutes = :longBreakDuration, updatedAt = :timestamp WHERE id = 1")
     suspend fun updateLongBreakDuration(
         longBreakDuration: Int,
-        timestamp: Long = System.currentTimeMillis()
+        timestamp: Long = System.currentTimeMillis(),
     )
 
     @Query("UPDATE timer_settings SET sessionsBeforeLongBreak = :sessions, updatedAt = :timestamp WHERE id = 1")
     suspend fun updateSessionsBeforeLongBreak(
         sessions: Int,
-        timestamp: Long = System.currentTimeMillis()
+        timestamp: Long = System.currentTimeMillis(),
     )
 
     @Query("DELETE FROM timer_settings WHERE id = 1")

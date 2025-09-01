@@ -16,5 +16,5 @@ data class TimerSettingsEntity(
     val sessionsBeforeLongBreak: Int = 4,
     // Timestamps
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
 )

@@ -2,7 +2,9 @@ package com.smirnoffmg.pomodorotimer.timer
 
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -35,7 +37,7 @@ class TimerStateManagerImplTest {
             // Given
             val durationMs = 25 * 60 * 1000L
             timerStateManager.startTimer(durationMs)
-        
+
             // Simulate time passing
             Thread.sleep(1000)
 
@@ -114,7 +116,7 @@ class TimerStateManagerImplTest {
             // Given
             val durationMs = 25 * 60 * 1000L
             timerStateManager.startTimer(durationMs)
-        
+
             // Simulate significant drift (3 seconds)
             val driftedRemaining = durationMs - 3000L
 
@@ -132,7 +134,7 @@ class TimerStateManagerImplTest {
             // Given
             val durationMs = 25 * 60 * 1000L
             timerStateManager.startTimer(durationMs)
-        
+
             // Simulate minimal drift (1 second)
             val minimalDriftRemaining = durationMs - 1000L
 

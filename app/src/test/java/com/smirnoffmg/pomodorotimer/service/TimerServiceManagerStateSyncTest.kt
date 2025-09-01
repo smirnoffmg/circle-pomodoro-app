@@ -14,7 +14,7 @@ class TimerServiceManagerStateSyncTest : BaseUnitTest() {
         val expectedInitialState = TimerState.STOPPED
         val expectedInitialTime = 25 * 60L // Default work duration
         val expectedInitialProgress = 1f
-        
+
         // Then: Verify initial state values are correct
         assertThat(expectedInitialState).isEqualTo(TimerState.STOPPED)
         assertThat(expectedInitialTime).isEqualTo(1500L)
@@ -27,12 +27,12 @@ class TimerServiceManagerStateSyncTest : BaseUnitTest() {
         val stoppedState = TimerState.STOPPED
         val runningState = TimerState.RUNNING
         val pausedState = TimerState.PAUSED
-        
+
         // When/Then: Verify state transitions are valid
         assertThat(stoppedState).isNotEqualTo(runningState)
         assertThat(runningState).isNotEqualTo(pausedState)
         assertThat(pausedState).isNotEqualTo(stoppedState)
-        
+
         // And: All states should be valid
         assertThat(stoppedState).isIn(listOf(TimerState.STOPPED, TimerState.RUNNING, TimerState.PAUSED))
         assertThat(runningState).isIn(listOf(TimerState.STOPPED, TimerState.RUNNING, TimerState.PAUSED))
@@ -44,11 +44,11 @@ class TimerServiceManagerStateSyncTest : BaseUnitTest() {
         // Given: Timer duration expectations
         val workDurationMinutes = 25
         val workDurationSeconds = workDurationMinutes * 60L
-        
+
         // When/Then: Verify duration calculations
         assertThat(workDurationSeconds).isEqualTo(1500L)
         assertThat(workDurationMinutes).isEqualTo(25)
-        
+
         // And: Verify time format conversions
         val minutes = workDurationSeconds / 60L
         val seconds = workDurationSeconds % 60L
@@ -59,15 +59,15 @@ class TimerServiceManagerStateSyncTest : BaseUnitTest() {
     @Test
     fun `progress calculation should work correctly`() {
         // Given: Progress calculation test case
-        val initialDuration = 300L  // 5 minutes
-        val remainingTime = 150L    // 2.5 minutes left
-        
+        val initialDuration = 300L // 5 minutes
+        val remainingTime = 150L // 2.5 minutes left
+
         // When: Calculating progress
         val expectedProgress = remainingTime.toFloat() / initialDuration.toFloat()
-        
+
         // Then: Progress should be 0.5 (50% remaining)
         assertThat(expectedProgress).isEqualTo(0.5f)
-        
+
         // And: Progress should be between 0 and 1
         assertThat(expectedProgress).isAtLeast(0f)
         assertThat(expectedProgress).isAtMost(1f)

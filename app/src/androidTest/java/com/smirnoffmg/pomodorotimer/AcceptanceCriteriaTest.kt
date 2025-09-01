@@ -14,11 +14,11 @@ import org.junit.runner.RunWith
 
 /**
  * Integration tests for Pomodoro Timer acceptance criteria.
- * 
+ *
  * Tests the complete user story:
  * "As a knowledge worker, I want automatic break reminders after 25-minute work sessions
  *  so that I don't burn out during long work periods"
- * 
+ *
  * Acceptance Criteria:
  * ✅ Timer automatically transitions to 5-minute break after work session
  * ✅ Clear notification shows break has started
@@ -43,12 +43,12 @@ class AcceptanceCriteriaTest {
             // When - Work session completes (simulate fast timer for testing)
             // Note: In real scenario, this would be 25 minutes
             runBlocking { delay(2000) } // Wait for timer to start
-            
+
             // Then - Should automatically transition to break
             // Verify break notification appears
             val breakNotification =
                 device.findObject(
-                    UiSelector().text("Time for a Break!")
+                    UiSelector().text("Time for a Break!"),
                 )
             assert(breakNotification.exists())
         }
@@ -60,17 +60,17 @@ class AcceptanceCriteriaTest {
             // Given - Timer is running
             // When - Work session completes and break starts
             runBlocking { delay(2000) }
-            
+
             // Then - Break notification should be shown
             val breakNotification =
                 device.findObject(
-                    UiSelector().text("Time for a Break!")
+                    UiSelector().text("Time for a Break!"),
                 )
             assert(breakNotification.exists())
-            
+
             val notificationText =
                 device.findObject(
-                    UiSelector().text("Take a moment to rest and recharge.")
+                    UiSelector().text("Take a moment to rest and recharge."),
                 )
             assert(notificationText.exists())
         }
@@ -82,18 +82,18 @@ class AcceptanceCriteriaTest {
             // Given - Timer is in work mode
             // When - Work session completes and break starts
             runBlocking { delay(2000) }
-            
+
             // Then - Break notification should indicate different visual styling
             val breakNotification =
                 device.findObject(
-                    UiSelector().text("Time for a Break!")
+                    UiSelector().text("Time for a Break!"),
                 )
             assert(breakNotification.exists())
-            
+
             // Verify break-specific notification content
             val breakText =
                 device.findObject(
-                    UiSelector().text("Take a moment to rest and recharge.")
+                    UiSelector().text("Take a moment to rest and recharge."),
                 )
             assert(breakText.exists())
         }
@@ -104,15 +104,15 @@ class AcceptanceCriteriaTest {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             // Given - Break is active
             runBlocking { delay(2000) } // Wait for break to start
-            
+
             // When - User can interact with skip break functionality
             // Note: This would require UI interaction, simplified for integration test
-            
+
             // Then - Skip break option should be available
             // Verify break notification is shown (skip option would be in UI)
             val breakNotification =
                 device.findObject(
-                    UiSelector().text("Time for a Break!")
+                    UiSelector().text("Time for a Break!"),
                 )
             assert(breakNotification.exists())
         }
@@ -127,11 +127,11 @@ class AcceptanceCriteriaTest {
                 runBlocking { delay(2000) } // Complete work session
                 runBlocking { delay(1000) } // Wait for break to start
             }
-            
+
             // Then - 4th session should trigger long break
             val longBreakNotification =
                 device.findObject(
-                    UiSelector().text("Time for a Long Break!")
+                    UiSelector().text("Time for a Long Break!"),
                 )
             assert(longBreakNotification.exists())
         }
@@ -142,20 +142,20 @@ class AcceptanceCriteriaTest {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             // Given - Break is active
             runBlocking { delay(2000) } // Wait for break to start
-            
+
             // When - Break completes (simulate fast for testing)
             runBlocking { delay(3000) } // Wait for break to complete
-            
+
             // Then - Break end notification should be shown
             val breakEndNotification =
                 device.findObject(
-                    UiSelector().text("Break Complete!")
+                    UiSelector().text("Break Complete!"),
                 )
             assert(breakEndNotification.exists())
-            
+
             val returnToWorkText =
                 device.findObject(
-                    UiSelector().text("Ready to get back to work?")
+                    UiSelector().text("Ready to get back to work?"),
                 )
             assert(returnToWorkText.exists())
         }
@@ -168,30 +168,30 @@ class AcceptanceCriteriaTest {
             // When - Complete full Pomodoro cycle
             // Work session 1
             runBlocking { delay(2000) }
-            
-            // Work session 2  
+
+            // Work session 2
             runBlocking { delay(2000) }
-            
+
             // Work session 3
             runBlocking { delay(2000) }
-            
+
             // Work session 4 - should trigger long break
             runBlocking { delay(2000) }
-            
+
             // Then - Verify complete cycle worked correctly
             val longBreakNotification =
                 device.findObject(
-                    UiSelector().text("Time for a Long Break!")
+                    UiSelector().text("Time for a Long Break!"),
                 )
             assert(longBreakNotification.exists())
-            
+
             // Complete long break
             runBlocking { delay(3000) }
-            
+
             // Should show break end notification
             val breakEndNotification =
                 device.findObject(
-                    UiSelector().text("Break Complete!")
+                    UiSelector().text("Break Complete!"),
                 )
             assert(breakEndNotification.exists())
         }

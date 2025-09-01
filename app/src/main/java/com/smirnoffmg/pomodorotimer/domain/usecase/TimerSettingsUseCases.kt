@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetTimerSettingsUseCase
     @Inject
     constructor(
-        private val repository: TimerSettingsRepository
+        private val repository: TimerSettingsRepository,
     ) {
         operator fun invoke(): Flow<TimerSettings?> = repository.getSettings()
     }
@@ -16,7 +16,7 @@ class GetTimerSettingsUseCase
 class SaveTimerSettingsUseCase
     @Inject
     constructor(
-        private val repository: TimerSettingsRepository
+        private val repository: TimerSettingsRepository,
     ) {
         suspend operator fun invoke(settings: TimerSettings): Result<Unit> {
             return try {
@@ -34,13 +34,18 @@ class SaveTimerSettingsUseCase
 class UpdateWorkDurationUseCase
     @Inject
     constructor(
-        private val repository: TimerSettingsRepository
+        private val repository: TimerSettingsRepository,
     ) {
         suspend operator fun invoke(minutes: Int): Result<Unit> {
             return try {
                 if (minutes !in TimerSettings.MIN_WORK_DURATION..TimerSettings.MAX_WORK_DURATION) {
                     return Result
-                        .failure(IllegalArgumentException("Work duration must be between ${TimerSettings.MIN_WORK_DURATION} and ${TimerSettings.MAX_WORK_DURATION} minutes"))
+                        .failure(
+                            IllegalArgumentException(
+                                "Work duration must be between " +
+                                    "${TimerSettings.MIN_WORK_DURATION} and ${TimerSettings.MAX_WORK_DURATION} minutes",
+                            ),
+                        )
                 }
                 repository.updateWorkDuration(minutes)
                 Result.success(Unit)
@@ -53,13 +58,18 @@ class UpdateWorkDurationUseCase
 class UpdateShortBreakDurationUseCase
     @Inject
     constructor(
-        private val repository: TimerSettingsRepository
+        private val repository: TimerSettingsRepository,
     ) {
         suspend operator fun invoke(minutes: Int): Result<Unit> {
             return try {
                 if (minutes !in TimerSettings.MIN_BREAK_DURATION..TimerSettings.MAX_BREAK_DURATION) {
                     return Result
-                        .failure(IllegalArgumentException("Short break duration must be between ${TimerSettings.MIN_BREAK_DURATION} and ${TimerSettings.MAX_BREAK_DURATION} minutes"))
+                        .failure(
+                            IllegalArgumentException(
+                                "Short break duration must be between " +
+                                    "${TimerSettings.MIN_BREAK_DURATION} and ${TimerSettings.MAX_BREAK_DURATION} minutes",
+                            ),
+                        )
                 }
                 repository.updateShortBreakDuration(minutes)
                 Result.success(Unit)
@@ -72,13 +82,18 @@ class UpdateShortBreakDurationUseCase
 class UpdateLongBreakDurationUseCase
     @Inject
     constructor(
-        private val repository: TimerSettingsRepository
+        private val repository: TimerSettingsRepository,
     ) {
         suspend operator fun invoke(minutes: Int): Result<Unit> {
             return try {
                 if (minutes !in TimerSettings.MIN_BREAK_DURATION..TimerSettings.MAX_BREAK_DURATION) {
                     return Result
-                        .failure(IllegalArgumentException("Long break duration must be between ${TimerSettings.MIN_BREAK_DURATION} and ${TimerSettings.MAX_BREAK_DURATION} minutes"))
+                        .failure(
+                            IllegalArgumentException(
+                                "Long break duration must be between " +
+                                    "${TimerSettings.MIN_BREAK_DURATION} and ${TimerSettings.MAX_BREAK_DURATION} minutes",
+                            ),
+                        )
                 }
                 repository.updateLongBreakDuration(minutes)
                 Result.success(Unit)
@@ -91,13 +106,18 @@ class UpdateLongBreakDurationUseCase
 class UpdateSessionsBeforeLongBreakUseCase
     @Inject
     constructor(
-        private val repository: TimerSettingsRepository
+        private val repository: TimerSettingsRepository,
     ) {
         suspend operator fun invoke(sessions: Int): Result<Unit> {
             return try {
                 if (sessions !in TimerSettings.MIN_SESSIONS_BEFORE_LONG_BREAK..TimerSettings.MAX_SESSIONS_BEFORE_LONG_BREAK) {
                     return Result
-                        .failure(IllegalArgumentException("Sessions before long break must be between ${TimerSettings.MIN_SESSIONS_BEFORE_LONG_BREAK} and ${TimerSettings.MAX_SESSIONS_BEFORE_LONG_BREAK}"))
+                        .failure(
+                            IllegalArgumentException(
+                                "Sessions before long break must be between " +
+                                    "${TimerSettings.MIN_SESSIONS_BEFORE_LONG_BREAK} and ${TimerSettings.MAX_SESSIONS_BEFORE_LONG_BREAK}",
+                            ),
+                        )
                 }
                 repository.updateSessionsBeforeLongBreak(sessions)
                 Result.success(Unit)
@@ -110,7 +130,7 @@ class UpdateSessionsBeforeLongBreakUseCase
 class ResetTimerSettingsUseCase
     @Inject
     constructor(
-        private val repository: TimerSettingsRepository
+        private val repository: TimerSettingsRepository,
     ) {
         suspend operator fun invoke(): Result<Unit> =
             try {

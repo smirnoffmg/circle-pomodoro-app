@@ -2,10 +2,8 @@ package com.smirnoffmg.pomodorotimer.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-/**
- * Material 3 color tokens for Pomodoro Timer app.
- * Uses a tomato/pomodoro-inspired color palette following Material Design 3 guidelines.
- */
+// Material 3 color tokens for Pomodoro Timer app.
+// Uses a tomato/pomodoro-inspired color palette following Material Design 3 guidelines.
 
 // Light Theme Colors
 val md_theme_light_primary = Color(0xFFD32F2F)

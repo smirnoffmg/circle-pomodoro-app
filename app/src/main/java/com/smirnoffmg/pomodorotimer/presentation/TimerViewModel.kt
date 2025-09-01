@@ -31,7 +31,7 @@ class TimerViewModel
                 .stateIn(
                     scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(5000),
-                    initialValue = emptyList()
+                    initialValue = emptyList(),
                 )
 
         /**

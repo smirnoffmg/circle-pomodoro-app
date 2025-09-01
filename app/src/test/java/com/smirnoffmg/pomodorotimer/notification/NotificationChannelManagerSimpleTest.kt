@@ -9,7 +9,8 @@ import androidx.work.Configuration
 import androidx.work.WorkManager
 import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
-import org.junit.Assert.*
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,7 +19,7 @@ import org.robolectric.annotation.Config
 @RunWith(AndroidJUnit4::class)
 @Config(
     sdk = [Build.VERSION_CODES.TIRAMISU],
-    application = com.smirnoffmg.pomodorotimer.TestApplication::class
+    application = com.smirnoffmg.pomodorotimer.TestApplication::class,
 )
 class NotificationChannelManagerSimpleTest {
     private lateinit var context: Context
@@ -28,7 +29,7 @@ class NotificationChannelManagerSimpleTest {
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
-        
+
         // Initialize WorkManager for testing
         val config =
             Configuration
@@ -37,7 +38,7 @@ class NotificationChannelManagerSimpleTest {
                 .setExecutor(SynchronousExecutor())
                 .build()
         WorkManagerTestInitHelper.initializeTestWorkManager(context, config)
-        
+
         notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         channelManager = NotificationChannelManager(context)
     }
@@ -60,7 +61,7 @@ class NotificationChannelManagerSimpleTest {
         val timerChannel = notificationManager.getNotificationChannel(NotificationChannelManager.TIMER_CHANNEL_ID)
         val breaksChannel = notificationManager.getNotificationChannel(NotificationChannelManager.BREAKS_CHANNEL_ID)
         val progressChannel = notificationManager.getNotificationChannel(NotificationChannelManager.PROGRESS_CHANNEL_ID)
-        
+
         assertNotNull("Timer channel should be created", timerChannel)
         assertNotNull("Breaks channel should be created", breaksChannel)
         assertNotNull("Progress channel should be created", progressChannel)

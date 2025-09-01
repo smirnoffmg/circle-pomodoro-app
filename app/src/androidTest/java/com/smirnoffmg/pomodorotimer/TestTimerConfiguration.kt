@@ -4,19 +4,19 @@ import com.smirnoffmg.pomodorotimer.domain.model.TimerSettings
 
 /**
  * Test configuration for Pomodoro Timer integration tests.
- * 
+ *
  * Provides shortened timer durations for faster testing while maintaining
  * the same logic flow and acceptance criteria verification.
  */
 object TestTimerConfiguration {
     /**
      * Test timer settings with shortened durations for fast integration testing.
-     * 
+     *
      * Real durations:
      * - Work: 25 minutes (1500 seconds)
-     * - Short break: 5 minutes (300 seconds)  
+     * - Short break: 5 minutes (300 seconds)
      * - Long break: 15 minutes (900 seconds)
-     * 
+     *
      * Test durations:
      * - Work: 2 seconds
      * - Short break: 3 seconds
@@ -27,7 +27,7 @@ object TestTimerConfiguration {
             workDurationMinutes = 0, // Will be overridden to 2 seconds
             shortBreakDurationMinutes = 0, // Will be overridden to 3 seconds
             longBreakDurationMinutes = 0, // Will be overridden to 4 seconds
-            sessionsBeforeLongBreak = 4
+            sessionsBeforeLongBreak = 4,
         )
 
     /**

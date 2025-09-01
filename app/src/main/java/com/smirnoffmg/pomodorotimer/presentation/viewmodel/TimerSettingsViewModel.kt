@@ -22,7 +22,7 @@ class TimerSettingsViewModel
         private val getTimerSettingsUseCase: GetTimerSettingsUseCase,
         private val saveTimerSettingsUseCase: SaveTimerSettingsUseCase,
         private val resetTimerSettingsUseCase: ResetTimerSettingsUseCase,
-        private val timerServiceManager: TimerServiceManager
+        private val timerServiceManager: TimerServiceManager,
     ) : ViewModel() {
         private val _settings = MutableStateFlow<TimerSettings?>(null)
         val settings: StateFlow<TimerSettings?> = _settings.asStateFlow()
@@ -65,7 +65,7 @@ class TimerSettingsViewModel
                         },
                         onFailure = { exception ->
                             _errorMessage.value = "Failed to save settings: ${exception.message}"
-                        }
+                        },
                     )
                 } catch (e: Exception) {
                     _errorMessage.value = "Failed to save settings: ${e.message}"
@@ -78,7 +78,7 @@ class TimerSettingsViewModel
                 try {
                     _isLoading.value = true
                     _errorMessage.value = null
-                
+
                     val result = resetTimerSettingsUseCase()
                     result.fold(
                         onSuccess = {
@@ -88,7 +88,7 @@ class TimerSettingsViewModel
                         },
                         onFailure = { exception ->
                             _errorMessage.value = "Failed to reset settings: ${exception.message}"
-                        }
+                        },
                     )
                 } finally {
                     _isLoading.value = false

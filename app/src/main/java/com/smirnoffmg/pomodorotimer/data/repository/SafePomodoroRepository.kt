@@ -19,7 +19,7 @@ import javax.inject.Singleton
 class SafePomodoroRepository
     @Inject
     constructor(
-        private val repository: PomodoroRepository
+        private val repository: PomodoroRepository,
     ) {
         suspend fun insertSessionSafe(session: PomodoroSession): Result<Long> {
             // Validate session before insertion
@@ -27,11 +27,11 @@ class SafePomodoroRepository
             if (validationResult is ValidationResult.Invalid) {
                 return Result.failure(
                     DatabaseException.InvalidSessionData(
-                        validationResult.errors.joinToString(", ") { it.message }
-                    )
+                        validationResult.errors.joinToString(", ") { it.message },
+                    ),
                 )
             }
-        
+
             return safeSuspendDbCall { repository.insertSession(session) }
         }
 
@@ -40,17 +40,17 @@ class SafePomodoroRepository
             if (validationResult is ValidationResult.Invalid) {
                 return Result.failure(
                     DatabaseException.InvalidSessionData(
-                        validationResult.errors.joinToString(", ") { it.message }
-                    )
+                        validationResult.errors.joinToString(", ") { it.message },
+                    ),
                 )
             }
-        
+
             return safeSuspendDbCall { repository.updateSession(session) }
         }
 
         suspend fun getSessionByIdSafe(sessionId: Long): Result<PomodoroSession> =
             safeSuspendDbCall {
-                repository.getSessionById(sessionId) 
+                repository.getSessionById(sessionId)
                     ?: throw DatabaseException.SessionNotFound(sessionId)
             }
 
@@ -59,11 +59,11 @@ class SafePomodoroRepository
                 val session =
                     repository.getSessionById(sessionId)
                         ?: throw DatabaseException.SessionNotFound(sessionId)
-            
+
                 if (session.isCompleted) {
                     throw DatabaseException.InvalidSessionData("Session is already completed")
                 }
-            
+
                 val endTime = System.currentTimeMillis()
                 repository.updateSessionCompletion(sessionId, endTime, true)
             }
@@ -73,7 +73,7 @@ class SafePomodoroRepository
                 // Verify session exists before deletion
                 repository.getSessionById(sessionId)
                     ?: throw DatabaseException.SessionNotFound(sessionId)
-            
+
                 repository.deleteSession(sessionId)
             }
 
@@ -81,36 +81,36 @@ class SafePomodoroRepository
 
         suspend fun getWeeklyStatisticsSafe(
             weekStart: Long,
-            weekEnd: Long
+            weekEnd: Long,
         ): Result<WeeklyStatistics> {
             if (weekEnd <= weekStart) {
                 return Result.failure(
-                    DatabaseException.InvalidSessionData("Week end must be after week start")
+                    DatabaseException.InvalidSessionData("Week end must be after week start"),
                 )
             }
-        
+
             return safeSuspendDbCall { repository.getWeeklyStatistics(weekStart, weekEnd) }
         }
 
         suspend fun getMonthlyStatisticsSafe(
             monthStart: Long,
-            monthEnd: Long
+            monthEnd: Long,
         ): Result<MonthlyStatistics> {
             if (monthEnd <= monthStart) {
                 return Result.failure(
-                    DatabaseException.InvalidSessionData("Month end must be after month start")
+                    DatabaseException.InvalidSessionData("Month end must be after month start"),
                 )
             }
-        
+
             return safeSuspendDbCall { repository.getMonthlyStatistics(monthStart, monthEnd) }
         }
 
         suspend fun getSessionTypeStatisticsSafe(
             fromDate: Long,
-            sessionType: SessionType
+            sessionType: SessionType,
         ): Result<SessionTypeStatistics> =
-            safeSuspendDbCall { 
-                repository.getSessionTypeStatistics(fromDate, sessionType) 
+            safeSuspendDbCall {
+                repository.getSessionTypeStatistics(fromDate, sessionType)
             }
 
         suspend fun getTotalCompletedSessionsCountSafe(fromDate: Long): Result<Int> =
@@ -121,10 +121,10 @@ class SafePomodoroRepository
 
         suspend fun getAverageDurationByTypeSafe(
             sessionType: SessionType,
-            fromDate: Long
+            fromDate: Long,
         ): Result<Double> =
-            safeSuspendDbCall { 
-                repository.getAverageDurationByType(sessionType, fromDate) 
+            safeSuspendDbCall {
+                repository.getAverageDurationByType(sessionType, fromDate)
             }
 
         suspend fun deleteSessionsBeforeDateSafe(beforeDate: Long): Result<Unit> {
@@ -132,11 +132,11 @@ class SafePomodoroRepository
             if (beforeDate > cutoffTime) {
                 return Result.failure(
                     DatabaseException.InvalidSessionData(
-                        "Cannot delete sessions newer than 30 days for safety"
-                    )
+                        "Cannot delete sessions newer than 30 days for safety",
+                    ),
                 )
             }
-        
+
             return safeSuspendDbCall { repository.deleteSessionsBeforeDate(beforeDate) }
         }
 
@@ -149,11 +149,11 @@ class SafePomodoroRepository
 
         fun getSessionsByWeekFlow(
             weekStart: Long,
-            weekEnd: Long
+            weekEnd: Long,
         ): Flow<List<PomodoroSession>> = repository.getSessionsByWeekFlow(weekStart, weekEnd)
 
         fun getSessionsByMonthFlow(
             monthStart: Long,
-            monthEnd: Long
+            monthEnd: Long,
         ): Flow<List<PomodoroSession>> = repository.getSessionsByMonthFlow(monthStart, monthEnd)
     }

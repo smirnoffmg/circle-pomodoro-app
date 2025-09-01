@@ -7,12 +7,12 @@ sealed class ValidationResult {
     object Valid : ValidationResult()
 
     data class Invalid(
-        val errors: List<ValidationError>
+        val errors: List<ValidationError>,
     ) : ValidationResult()
 }
 
 sealed class ValidationError(
-    val message: String
+    val message: String,
 ) {
     object InvalidDuration : ValidationError("Duration must be greater than 0")
 
@@ -62,7 +62,7 @@ object SessionValidator {
             if (endTime < session.startTime) {
                 errors.add(ValidationError.InvalidEndTime)
             }
-            
+
             // If session is completed, validate consistency
             if (session.isCompleted) {
                 val calculatedDuration = endTime - session.startTime
@@ -86,7 +86,7 @@ object SessionValidator {
 
     fun validateDuration(
         duration: Long,
-        sessionType: SessionType
+        sessionType: SessionType,
     ): ValidationResult {
         val errors = mutableListOf<ValidationError>()
 

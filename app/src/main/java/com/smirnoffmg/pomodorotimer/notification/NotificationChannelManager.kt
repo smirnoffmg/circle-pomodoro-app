@@ -14,13 +14,13 @@ import javax.inject.Singleton
 class NotificationChannelManager
     @Inject
     constructor(
-        @ApplicationContext private val context: Context
+        @ApplicationContext private val context: Context,
     ) {
         companion object {
             const val TIMER_CHANNEL_ID = "timer_channel"
-            const val BREAKS_CHANNEL_ID = "breaks_channel" 
+            const val BREAKS_CHANNEL_ID = "breaks_channel"
             const val PROGRESS_CHANNEL_ID = "progress_channel"
-        
+
             private const val TIMER_CHANNEL_NAME = "Timer Service"
             private const val BREAKS_CHANNEL_NAME = "Break Notifications"
             private const val PROGRESS_CHANNEL_NAME = "Progress Updates"
@@ -44,7 +44,7 @@ class NotificationChannelManager
                     NotificationChannel(
                         TIMER_CHANNEL_ID,
                         TIMER_CHANNEL_NAME,
-                        NotificationManager.IMPORTANCE_LOW
+                        NotificationManager.IMPORTANCE_LOW,
                     ).apply {
                         description = "Persistent timer service notification"
                         setShowBadge(false)
@@ -62,7 +62,7 @@ class NotificationChannelManager
                     NotificationChannel(
                         BREAKS_CHANNEL_ID,
                         BREAKS_CHANNEL_NAME,
-                        NotificationManager.IMPORTANCE_DEFAULT
+                        NotificationManager.IMPORTANCE_DEFAULT,
                     ).apply {
                         description = "Break start and end notifications"
                         setShowBadge(true)
@@ -74,7 +74,7 @@ class NotificationChannelManager
                                 .Builder()
                                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                                 .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                                .build()
+                                .build(),
                         )
                     }
                 notificationManager.createNotificationChannel(channel)
@@ -87,7 +87,7 @@ class NotificationChannelManager
                     NotificationChannel(
                         PROGRESS_CHANNEL_ID,
                         PROGRESS_CHANNEL_NAME,
-                        NotificationManager.IMPORTANCE_DEFAULT
+                        NotificationManager.IMPORTANCE_DEFAULT,
                     ).apply {
                         description = "Session completion and milestone notifications"
                         setShowBadge(true)
@@ -99,7 +99,7 @@ class NotificationChannelManager
                                 .Builder()
                                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                                 .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                                .build()
+                                .build(),
                         )
                     }
                 notificationManager.createNotificationChannel(channel)

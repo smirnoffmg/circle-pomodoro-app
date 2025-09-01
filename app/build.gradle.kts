@@ -9,7 +9,6 @@ plugins {
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
-
 }
 
 android {
@@ -35,7 +34,7 @@ android {
             if (keystoreFile.exists()) {
                 val properties = Properties()
                 properties.load(file("signing.properties").inputStream())
-                
+
                 storeFile = keystoreFile
                 storePassword = properties.getProperty("storePassword")
                 keyAlias = properties.getProperty("keyAlias")
@@ -52,11 +51,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            signingConfig = if (signingConfigs.findByName("release")?.storeFile?.exists() == true) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            signingConfig =
+                if (signingConfigs.findByName("release")?.storeFile?.exists() == true) {
+                    signingConfigs.getByName("release")
+                } else {
+                    signingConfigs.getByName("debug")
+                }
         }
         debug {
             isDebuggable = true
@@ -143,8 +143,6 @@ dependencies {
     // DataStore
     implementation(libs.datastore.preferences)
 
-
-
     // Testing - Unit Tests
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
@@ -153,24 +151,24 @@ dependencies {
     testImplementation(libs.coroutines.test)
     testImplementation(libs.turbine)
     testImplementation(libs.truth)
-    
+
     // Testing - Robolectric (for Android framework testing)
     testImplementation("org.robolectric:robolectric:4.15")
-    
+
     // Testing - AndroidX Test (recommended by Robolectric)
     testImplementation("androidx.test:core:1.5.0")
     testImplementation("androidx.test.ext:junit:1.1.5")
-    
+
     // Testing - WorkManager (for WorkManager initialization in tests)
     testImplementation("androidx.work:work-testing:2.9.0")
-    
+
     // Testing - Hilt
     testImplementation(libs.hilt.android.testing)
     kspTest(libs.hilt.compiler)
-    
+
     // Testing - Room
     testImplementation(libs.room.testing)
-    
+
     // Testing - WorkManager
     testImplementation(libs.work.testing)
 
@@ -181,7 +179,7 @@ dependencies {
     androidTestImplementation(libs.ui.test.junit4)
     androidTestImplementation(libs.hilt.android.testing)
     kspAndroidTest(libs.hilt.compiler)
-    
+
     // Testing - UI Automator for notification testing
     androidTestImplementation("androidx.test.uiautomator:uiautomator:2.2.0")
 

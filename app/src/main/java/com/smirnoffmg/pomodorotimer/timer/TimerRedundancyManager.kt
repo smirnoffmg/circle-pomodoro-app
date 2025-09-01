@@ -8,7 +8,7 @@ import javax.inject.Singleton
  * - Primary timer: Foreground service with coroutine countdown
  * - Backup timer: AlarmManager for system-level reliability
  * - Health monitoring: Automatic failover and drift correction
- * 
+ *
  * Follows SOLID principles through dependency injection and interface segregation
  */
 @Singleton
@@ -17,7 +17,7 @@ class TimerRedundancyManager
     constructor(
         private val timerStateManager: TimerStateManager,
         private val alarmScheduler: AlarmScheduler,
-        private val healthMonitor: HealthMonitor
+        private val healthMonitor: HealthMonitor,
     ) {
         // Expose state flows from timer state manager
         val timerState = timerStateManager.timerState
@@ -91,7 +91,7 @@ class TimerRedundancyManager
 enum class TimerRedundancyState {
     STOPPED,
     RUNNING,
-    PAUSED
+    PAUSED,
 }
 
 enum class TimerHealthStatus {
@@ -99,5 +99,5 @@ enum class TimerHealthStatus {
     DRIFT_DETECTED,
     PRIMARY_UNRESPONSIVE,
     FAILOVER_ACTIVATED,
-    BACKUP_UNAVAILABLE
+    BACKUP_UNAVAILABLE,
 }

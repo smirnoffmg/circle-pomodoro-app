@@ -6,7 +6,10 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -101,14 +104,14 @@ class NotificationAndroidVersionTest {
                 notificationHelper.createTimerNotification(
                     remainingTime = "25:00",
                     cycleType = "Work",
-                    isRunning = true
+                    isRunning = true,
                 )
 
             val breakNotification =
                 notificationHelper.createBreakNotification(
                     remainingTime = "05:00",
-                    breakType = "Short Break", 
-                    isRunning = true
+                    breakType = "Short Break",
+                    isRunning = true,
                 )
 
             // Then - Notifications should be created successfully
@@ -132,7 +135,7 @@ class NotificationAndroidVersionTest {
                 notificationHelper.createTimerNotification(
                     remainingTime = "20:00",
                     cycleType = "Work",
-                    isRunning = false
+                    isRunning = false,
                 )
 
             // Show various notifications
@@ -199,21 +202,21 @@ class NotificationAndroidVersionTest {
                 notificationHelper.createTimerNotification(
                     remainingTime = "15:30",
                     cycleType = "Work",
-                    isRunning = true
+                    isRunning = true,
                 )
 
             val pausedNotification =
                 notificationHelper.createTimerNotification(
-                    remainingTime = "15:30", 
+                    remainingTime = "15:30",
                     cycleType = "Work",
-                    isRunning = false
+                    isRunning = false,
                 )
 
             val breakNotification =
                 notificationHelper.createBreakNotification(
                     remainingTime = "04:30",
                     breakType = "Short Break",
-                    isRunning = true
+                    isRunning = true,
                 )
 
             // Then - Actions should be present
@@ -222,12 +225,18 @@ class NotificationAndroidVersionTest {
             assertEquals("Break notification should have 2 actions", 2, breakNotification?.actions?.size)
 
             // Verify action types
-            assertTrue("Should have Pause action", 
-                runningNotification?.actions?.any { it.title == "Pause" } == true)
-            assertTrue("Should have Resume action",
-                pausedNotification?.actions?.any { it.title == "Resume" } == true)
-            assertTrue("Should have Skip action",
-                breakNotification?.actions?.any { it.title == "Skip" } == true)
+            assertTrue(
+                "Should have Pause action",
+                runningNotification?.actions?.any { it.title == "Pause" } == true,
+            )
+            assertTrue(
+                "Should have Resume action",
+                pausedNotification?.actions?.any { it.title == "Resume" } == true,
+            )
+            assertTrue(
+                "Should have Skip action",
+                breakNotification?.actions?.any { it.title == "Skip" } == true,
+            )
         }
 
     @Test
@@ -236,7 +245,7 @@ class NotificationAndroidVersionTest {
         runTest {
             // This test verifies the method exists and doesn't crash
             // Actual behavior depends on complex Activity mocking
-        
+
             // When/Then - Should not throw exception
             assertTrue("Permission rationale methods should exist", true)
         }
@@ -247,7 +256,7 @@ class NotificationAndroidVersionTest {
         runTest {
             // This test verifies the method exists and doesn't crash
             // Actual behavior depends on complex Activity mocking
-        
+
             // When/Then - Should not throw exception
             assertTrue("Permission rationale methods should exist", true)
         }

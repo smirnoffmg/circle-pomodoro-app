@@ -76,6 +76,6 @@ object DatabaseModule {
     @Singleton
     fun provideTimerServiceManager(
         @ApplicationContext context: Context,
-        getTimerSettingsUseCase: GetTimerSettingsUseCase
+        getTimerSettingsUseCase: GetTimerSettingsUseCase,
     ): TimerServiceManager = TimerServiceManager(context, getTimerSettingsUseCase)
 }

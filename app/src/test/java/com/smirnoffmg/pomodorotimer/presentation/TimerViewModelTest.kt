@@ -35,7 +35,7 @@ class TimerViewModelTest {
                 startTime = System.currentTimeMillis(),
                 endTime = null,
                 isCompleted = false,
-                type = SessionType.WORK
+                type = SessionType.WORK,
             )
 
         // Then
@@ -55,7 +55,7 @@ class TimerViewModelTest {
                 startTime = System.currentTimeMillis(),
                 endTime = null,
                 isCompleted = false,
-                type = SessionType.WORK
+                type = SessionType.WORK,
             )
 
         // Then
@@ -76,7 +76,7 @@ class TimerViewModelTest {
                 startTime = timestamp,
                 endTime = null,
                 isCompleted = false,
-                type = SessionType.WORK
+                type = SessionType.WORK,
             )
 
         // Then

@@ -11,7 +11,7 @@ fun TimerSettingsEntity.toDomainModel(): TimerSettings =
         longBreakDurationMinutes = longBreakDurationMinutes,
         sessionsBeforeLongBreak = sessionsBeforeLongBreak,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
     )
 
 fun TimerSettings.toEntity(): TimerSettingsEntity =
@@ -22,5 +22,5 @@ fun TimerSettings.toEntity(): TimerSettingsEntity =
         longBreakDurationMinutes = longBreakDurationMinutes,
         sessionsBeforeLongBreak = sessionsBeforeLongBreak,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
     )

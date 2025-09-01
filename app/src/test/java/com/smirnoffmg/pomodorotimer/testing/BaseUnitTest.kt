@@ -16,7 +16,7 @@ import org.junit.runner.Description
 abstract class BaseUnitTest {
     @get:Rule
     val testCoroutineRule = TestCoroutineRule()
-    
+
     protected val testScope = TestScope(UnconfinedTestDispatcher())
 
     @Before

@@ -13,7 +13,7 @@ class TimerStateManagerImpl
     constructor() : TimerStateManager {
         private val _timerState = MutableStateFlow(TimerRedundancyState.STOPPED)
         override val timerState: StateFlow<TimerRedundancyState> = _timerState.asStateFlow()
-    
+
         private val _healthStatus = MutableStateFlow(TimerHealthStatus.HEALTHY)
         override val healthStatus: StateFlow<TimerHealthStatus> = _healthStatus.asStateFlow()
 
@@ -31,31 +31,31 @@ class TimerStateManagerImpl
             timerDurationMs = durationMs
             primaryTimerAlive = true
             lastHealthCheck = timerStartTime
-        
+
             _timerState.value = TimerRedundancyState.RUNNING
             _healthStatus.value = TimerHealthStatus.HEALTHY
         }
 
         override fun pauseTimer(): Long {
             if (_timerState.value != TimerRedundancyState.RUNNING) return 0L
-        
+
             val elapsed = System.currentTimeMillis() - timerStartTime
             val remaining = (timerDurationMs - elapsed).coerceAtLeast(0L)
-        
+
             _timerState.value = TimerRedundancyState.PAUSED
             primaryTimerAlive = false
-        
+
             return remaining
         }
 
         override fun resumeTimer(remainingMs: Long) {
             if (_timerState.value != TimerRedundancyState.PAUSED) return
-        
+
             timerStartTime = System.currentTimeMillis()
             timerDurationMs = remainingMs
             primaryTimerAlive = true
             lastHealthCheck = timerStartTime
-        
+
             _timerState.value = TimerRedundancyState.RUNNING
             _healthStatus.value = TimerHealthStatus.HEALTHY
         }
@@ -68,14 +68,14 @@ class TimerStateManagerImpl
 
         override fun reportPrimaryTimerHeartbeat(currentRemainingMs: Long) {
             if (_timerState.value != TimerRedundancyState.RUNNING) return
-        
+
             primaryTimerAlive = true
             lastHealthCheck = System.currentTimeMillis()
-        
+
             val expectedElapsed = System.currentTimeMillis() - timerStartTime
             val expectedRemaining = (timerDurationMs - expectedElapsed).coerceAtLeast(0L)
             val drift = abs(currentRemainingMs - expectedRemaining)
-        
+
             if (drift > DRIFT_TOLERANCE_MS) {
                 _healthStatus.value = TimerHealthStatus.DRIFT_DETECTED
                 timerStartTime = System.currentTimeMillis() - (timerDurationMs - currentRemainingMs)

@@ -24,10 +24,10 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,18 +41,18 @@ import com.smirnoffmg.pomodorotimer.presentation.viewmodel.TimerSettingsViewMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimerSettingsScreen(
+fun timerSettingsScreen(
     onNavigateBack: () -> Unit,
-    viewModel: TimerSettingsViewModel = hiltViewModel()
+    viewModel: TimerSettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-    
+
     var workDuration by remember { mutableStateOf(25) }
     var shortBreakDuration by remember { mutableStateOf(5) }
     var longBreakDuration by remember { mutableStateOf(15) }
     var sessionsBeforeLongBreak by remember { mutableStateOf(4) }
-           
+
     // Initialize local state from settings only once
     LaunchedEffect(settings) {
         settings?.let { currentSettings ->
@@ -62,7 +62,7 @@ fun TimerSettingsScreen(
             sessionsBeforeLongBreak = currentSettings.sessionsBeforeLongBreak
         }
     }
-    
+
     // Auto-save settings when values change with debouncing
     LaunchedEffect(workDuration, shortBreakDuration, longBreakDuration, sessionsBeforeLongBreak) {
         // Only save if we have loaded settings at least once
@@ -74,12 +74,12 @@ fun TimerSettingsScreen(
                     workDurationMinutes = workDuration,
                     shortBreakDurationMinutes = shortBreakDuration,
                     longBreakDurationMinutes = longBreakDuration,
-                    sessionsBeforeLongBreak = sessionsBeforeLongBreak
+                    sessionsBeforeLongBreak = sessionsBeforeLongBreak,
                 )
             viewModel.saveSettings(newSettings)
         }
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -93,9 +93,9 @@ fun TimerSettingsScreen(
                     IconButton(onClick = { viewModel.resetToDefaults() }) {
                         Icon(Icons.Default.Restore, contentDescription = "Reset to Defaults")
                     }
-                }
+                },
             )
-        }
+        },
     ) { paddingValues ->
         Column(
             modifier =
@@ -104,54 +104,54 @@ fun TimerSettingsScreen(
                     .padding(paddingValues)
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // Work Duration Setting
-            DurationSettingCard(
+            durationSettingCard(
                 title = "Work Session Duration",
                 subtitle = "How long each focus session lasts",
                 value = workDuration,
                 onValueChange = { workDuration = it },
                 minValue = TimerSettings.MIN_WORK_DURATION,
                 maxValue = TimerSettings.MAX_WORK_DURATION,
-                unit = "minutes"
+                unit = "minutes",
             )
-            
+
             // Short Break Duration Setting
-            DurationSettingCard(
+            durationSettingCard(
                 title = "Short Break Duration",
                 subtitle = "Duration of regular breaks between work sessions",
                 value = shortBreakDuration,
                 onValueChange = { shortBreakDuration = it },
                 minValue = TimerSettings.MIN_BREAK_DURATION,
                 maxValue = TimerSettings.MAX_BREAK_DURATION,
-                unit = "minutes"
+                unit = "minutes",
             )
-            
+
             // Long Break Duration Setting
-            DurationSettingCard(
+            durationSettingCard(
                 title = "Long Break Duration",
-                subtitle = "Duration of extended breaks after multiple work sessions",
+                subtitle = "Duration of extended breaks between work sessions",
                 value = longBreakDuration,
                 onValueChange = { longBreakDuration = it },
                 minValue = TimerSettings.MIN_BREAK_DURATION,
                 maxValue = TimerSettings.MAX_BREAK_DURATION,
-                unit = "minutes"
+                unit = "minutes",
             )
-            
+
             // Sessions Before Long Break Setting
-            DurationSettingCard(
+            durationSettingCard(
                 title = "Sessions Before Long Break",
                 subtitle = "Number of work sessions before taking a long break",
                 value = sessionsBeforeLongBreak,
                 onValueChange = { sessionsBeforeLongBreak = it },
                 minValue = TimerSettings.MIN_SESSIONS_BEFORE_LONG_BREAK,
                 maxValue = TimerSettings.MAX_SESSIONS_BEFORE_LONG_BREAK,
-                unit = "sessions"
+                unit = "sessions",
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-                   
+
             // Auto-save indicator and error display
             if (errorMessage != null) {
                 Text(
@@ -159,7 +159,7 @@ fun TimerSettingsScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             } else {
                 Text(
@@ -167,7 +167,7 @@ fun TimerSettingsScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
@@ -175,70 +175,70 @@ fun TimerSettingsScreen(
 }
 
 @Composable
-private fun DurationSettingCard(
+private fun durationSettingCard(
     title: String,
     subtitle: String,
     value: Int,
     onValueChange: (Int) -> Unit,
     minValue: Int,
     maxValue: Int,
-    unit: String
+    unit: String,
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
                 text = title,
                 style =
                     MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    )
+                        fontWeight = FontWeight.Bold,
+                    ),
             )
-            
+
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = "$minValue $unit",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                
+
                 Text(
                     text = "$value $unit",
                     style =
                         MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         ),
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
-                
+
                 Text(
                     text = "$maxValue $unit",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            
+
             Slider(
                 value = value.toFloat(),
                 onValueChange = { onValueChange(it.toInt()) },
                 valueRange = minValue.toFloat()..maxValue.toFloat(),
-                steps = (maxValue - minValue - 1).coerceAtLeast(0)
+                steps = (maxValue - minValue - 1).coerceAtLeast(0),
             )
         }
     }

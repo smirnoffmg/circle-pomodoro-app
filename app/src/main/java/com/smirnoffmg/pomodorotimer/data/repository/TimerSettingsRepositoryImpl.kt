@@ -12,7 +12,7 @@ import javax.inject.Inject
 class TimerSettingsRepositoryImpl
     @Inject
     constructor(
-        private val timerSettingsDao: TimerSettingsDao
+        private val timerSettingsDao: TimerSettingsDao,
     ) : TimerSettingsRepository {
         override fun getSettings(): Flow<TimerSettings?> =
             timerSettingsDao.getSettings().map { entity ->

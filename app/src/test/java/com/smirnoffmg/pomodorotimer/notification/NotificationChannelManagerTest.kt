@@ -6,18 +6,23 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 @Config(
     sdk = [Build.VERSION_CODES.TIRAMISU],
-    application = com.smirnoffmg.pomodorotimer.TestApplication::class
+    application = com.smirnoffmg.pomodorotimer.TestApplication::class,
 )
 class NotificationChannelManagerTest {
     private lateinit var context: Context
@@ -42,7 +47,7 @@ class NotificationChannelManagerTest {
             val timerChannel = notificationManager.getNotificationChannel(NotificationChannelManager.TIMER_CHANNEL_ID)
             val breaksChannel = notificationManager.getNotificationChannel(NotificationChannelManager.BREAKS_CHANNEL_ID)
             val progressChannel = notificationManager.getNotificationChannel(NotificationChannelManager.PROGRESS_CHANNEL_ID)
-        
+
             assertNotNull("Timer channel should be created", timerChannel)
             assertNotNull("Breaks channel should be created", breaksChannel)
             assertNotNull("Progress channel should be created", progressChannel)
@@ -57,7 +62,7 @@ class NotificationChannelManagerTest {
             // Then
             val timerChannel = notificationManager.getNotificationChannel(NotificationChannelManager.TIMER_CHANNEL_ID)
             assertNotNull("Timer channel should be created", timerChannel)
-        
+
             timerChannel?.let { channel ->
                 assertEquals("Timer Service", channel.name)
                 assertEquals(NotificationManager.IMPORTANCE_LOW, channel.importance)
@@ -78,7 +83,7 @@ class NotificationChannelManagerTest {
             // Then
             val breaksChannel = notificationManager.getNotificationChannel(NotificationChannelManager.BREAKS_CHANNEL_ID)
             assertNotNull("Breaks channel should be created", breaksChannel)
-        
+
             breaksChannel?.let { channel ->
                 assertEquals("Break Notifications", channel.name)
                 assertEquals(NotificationManager.IMPORTANCE_DEFAULT, channel.importance)
@@ -89,7 +94,7 @@ class NotificationChannelManagerTest {
                 assertArrayEquals(
                     "Should have correct vibration pattern",
                     longArrayOf(0, 300, 200, 300),
-                    channel.vibrationPattern
+                    channel.vibrationPattern,
                 )
                 assertNotNull("Should have sound", channel.sound)
             }
@@ -104,7 +109,7 @@ class NotificationChannelManagerTest {
             // Then
             val progressChannel = notificationManager.getNotificationChannel(NotificationChannelManager.PROGRESS_CHANNEL_ID)
             assertNotNull("Progress channel should be created", progressChannel)
-        
+
             progressChannel?.let { channel ->
                 assertEquals("Progress Updates", channel.name)
                 assertEquals(NotificationManager.IMPORTANCE_DEFAULT, channel.importance)
@@ -115,7 +120,7 @@ class NotificationChannelManagerTest {
                 assertArrayEquals(
                     "Should have correct vibration pattern",
                     longArrayOf(0, 100, 100, 100),
-                    channel.vibrationPattern
+                    channel.vibrationPattern,
                 )
                 assertNotNull("Should have sound", channel.sound)
             }
@@ -142,7 +147,7 @@ class NotificationChannelManagerTest {
             // Then
             val breaksChannel = notificationManager.getNotificationChannel(NotificationChannelManager.BREAKS_CHANNEL_ID)
             val progressChannel = notificationManager.getNotificationChannel(NotificationChannelManager.PROGRESS_CHANNEL_ID)
-        
+
             breaksChannel?.let { channel ->
                 assertNotNull("Breaks channel should have audio attributes", channel.audioAttributes)
                 channel.audioAttributes?.let { attrs ->
@@ -150,7 +155,7 @@ class NotificationChannelManagerTest {
                     assertEquals(AudioAttributes.USAGE_NOTIFICATION, attrs.usage)
                 }
             }
-        
+
             progressChannel?.let { channel ->
                 assertNotNull("Progress channel should have audio attributes", channel.audioAttributes)
                 channel.audioAttributes?.let { attrs ->
@@ -173,7 +178,7 @@ class NotificationChannelManagerTest {
         assertEquals("timer_channel", NotificationChannelManager.TIMER_CHANNEL_ID)
         assertEquals("breaks_channel", NotificationChannelManager.BREAKS_CHANNEL_ID)
         assertEquals("progress_channel", NotificationChannelManager.PROGRESS_CHANNEL_ID)
-        
+
         // These should be compile-time constants
         assertTrue("Timer channel ID should not be empty", NotificationChannelManager.TIMER_CHANNEL_ID.isNotEmpty())
         assertTrue("Breaks channel ID should not be empty", NotificationChannelManager.BREAKS_CHANNEL_ID.isNotEmpty())
@@ -192,7 +197,7 @@ class NotificationChannelManagerTest {
             val timerChannel = notificationManager.getNotificationChannel(NotificationChannelManager.TIMER_CHANNEL_ID)
             val breaksChannel = notificationManager.getNotificationChannel(NotificationChannelManager.BREAKS_CHANNEL_ID)
             val progressChannel = notificationManager.getNotificationChannel(NotificationChannelManager.PROGRESS_CHANNEL_ID)
-        
+
             assertNotNull("Timer channel should exist", timerChannel)
             assertNotNull("Breaks channel should exist", breaksChannel)
             assertNotNull("Progress channel should exist", progressChannel)
@@ -205,9 +210,9 @@ class NotificationChannelManagerTest {
             setOf(
                 NotificationChannelManager.TIMER_CHANNEL_ID,
                 NotificationChannelManager.BREAKS_CHANNEL_ID,
-                NotificationChannelManager.PROGRESS_CHANNEL_ID
+                NotificationChannelManager.PROGRESS_CHANNEL_ID,
             )
-        
+
         assertEquals("All channel IDs should be unique", 3, channelIds.size)
     }
 }

@@ -52,10 +52,10 @@ class SimpleTest {
         // Given - Timer progress calculation
         val initialDuration = 25 * 60L // 25 minutes
         val remainingTime = 12 * 60L // 12 minutes remaining
-        
+
         // When - Calculate progress
         val progress = remainingTime.toFloat() / initialDuration.toFloat()
-        
+
         // Then - Should calculate correctly (12/25 = 0.48)
         assertThat(progress).isEqualTo(0.48f)
     }
@@ -66,7 +66,7 @@ class SimpleTest {
         val stopped = com.smirnoffmg.pomodorotimer.presentation.viewmodel.TimerState.STOPPED
         val running = com.smirnoffmg.pomodorotimer.presentation.viewmodel.TimerState.RUNNING
         val paused = com.smirnoffmg.pomodorotimer.presentation.viewmodel.TimerState.PAUSED
-        
+
         // When & Then - State transitions should work
         assertThat(stopped).isNotEqualTo(running)
         assertThat(running).isNotEqualTo(paused)

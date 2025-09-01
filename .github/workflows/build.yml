@@ -191,10 +191,22 @@ jobs:
         if: (github.event.inputs.build_type == 'signed-release' || github.event.inputs.build_type == 'all') && github.event_name == 'workflow_dispatch'
         id: release_notes
         run: |
+          if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
+            APK_SIZE=$(ls -lh app/build/outputs/apk/release/app-release.apk | awk '{print $5}')
+          else
+            APK_SIZE="N/A"
+          fi
+          
+          if [ -f "app/build/outputs/bundle/release/app-release.aab" ]; then
+            AAB_SIZE=$(ls -lh app/build/outputs/bundle/release/app-release.aab | awk '{print $5}')
+          else
+            AAB_SIZE="N/A"
+          fi
+          
           cat > release_notes.md << EOF
           **Version:** ${{ steps.version.outputs.version_name }} (${{ steps.version.outputs.version_code }})
-          **APK:** \$(ls -lh app/build/outputs/apk/release/app-release.apk | awk '{print \$5}')
-          **AAB:** \$(ls -lh app/build/outputs/bundle/release/app-release.aab | awk '{print \$5}')
+          **APK:** $APK_SIZE
+          **AAB:** $AAB_SIZE
           **Commit:** \`${{ github.sha }}\`
           EOF
           

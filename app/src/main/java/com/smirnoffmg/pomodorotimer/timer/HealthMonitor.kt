@@ -9,6 +9,6 @@ interface HealthMonitor {
 
     fun checkForDrift(
         currentRemainingMs: Long,
-        expectedRemainingMs: Long
+        expectedRemainingMs: Long,
     ): Boolean
 }

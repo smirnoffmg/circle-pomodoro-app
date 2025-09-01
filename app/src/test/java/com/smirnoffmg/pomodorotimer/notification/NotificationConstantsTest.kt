@@ -1,6 +1,7 @@
 package com.smirnoffmg.pomodorotimer.notification
 
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NotificationConstantsTest {
@@ -25,7 +26,7 @@ class NotificationConstantsTest {
         assertEquals("timer_channel", NotificationChannelManager.TIMER_CHANNEL_ID)
         assertEquals("breaks_channel", NotificationChannelManager.BREAKS_CHANNEL_ID)
         assertEquals("progress_channel", NotificationChannelManager.PROGRESS_CHANNEL_ID)
-        
+
         // These should be compile-time constants
         assertTrue("Timer channel ID should not be empty", NotificationChannelManager.TIMER_CHANNEL_ID.isNotEmpty())
         assertTrue("Breaks channel ID should not be empty", NotificationChannelManager.BREAKS_CHANNEL_ID.isNotEmpty())
@@ -38,9 +39,9 @@ class NotificationConstantsTest {
             setOf(
                 NotificationChannelManager.TIMER_CHANNEL_ID,
                 NotificationChannelManager.BREAKS_CHANNEL_ID,
-                NotificationChannelManager.PROGRESS_CHANNEL_ID
+                NotificationChannelManager.PROGRESS_CHANNEL_ID,
             )
-        
+
         assertEquals("All channel IDs should be unique", 3, channelIds.size)
     }
 }

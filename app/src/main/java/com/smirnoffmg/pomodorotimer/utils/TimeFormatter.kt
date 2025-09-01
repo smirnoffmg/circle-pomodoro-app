@@ -4,18 +4,18 @@ import java.util.Locale
 
 /**
  * Utility class for time formatting with consistent locale
- * 
+ *
  * Follows SOLID principles:
  * - Single Responsibility: Only handles time formatting
  * - Open/Closed: Easy to extend for new formats
- * 
+ *
  * Follows DRY principle by centralizing time formatting logic
  * Follows KISS principle with simple, focused functionality
  */
 object TimeFormatter {
     /**
      * Format time in seconds to MM:SS format
-     * 
+     *
      * @param timeInSeconds Time in seconds
      * @return Formatted time string (e.g., "25:00")
      */

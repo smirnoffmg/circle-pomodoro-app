@@ -4,7 +4,8 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -186,13 +187,15 @@ class NotificationSettingsTest {
 
             // Verify they are disabled
             val modifiedSettings = notificationSettings.getAllSettings()
-            assertFalse("All should be disabled", 
+            assertFalse(
+                "All should be disabled",
                 modifiedSettings.breakNotificationsEnabled ||
                     modifiedSettings.sessionCompleteNotificationsEnabled ||
                     modifiedSettings.milestoneNotificationsEnabled ||
                     modifiedSettings.soundEnabled ||
                     modifiedSettings.vibrationEnabled ||
-                    modifiedSettings.persistentTimerNotificationEnabled)
+                    modifiedSettings.persistentTimerNotificationEnabled,
+            )
 
             // When - Reset to defaults
             notificationSettings.resetToDefaults()
@@ -233,7 +236,7 @@ class NotificationSettingsTest {
                 milestoneNotificationsEnabled = true,
                 soundEnabled = false,
                 vibrationEnabled = true,
-                persistentTimerNotificationEnabled = false
+                persistentTimerNotificationEnabled = false,
             )
 
         // Then

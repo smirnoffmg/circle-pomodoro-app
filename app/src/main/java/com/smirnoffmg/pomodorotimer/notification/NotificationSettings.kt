@@ -10,7 +10,7 @@ import javax.inject.Singleton
 class NotificationSettings
     @Inject
     constructor(
-        @ApplicationContext private val context: Context
+        @ApplicationContext private val context: Context,
     ) {
         companion object {
             private const val PREFS_NAME = "notification_settings"
@@ -56,7 +56,7 @@ class NotificationSettings
             val milestoneNotificationsEnabled: Boolean,
             val soundEnabled: Boolean,
             val vibrationEnabled: Boolean,
-            val persistentTimerNotificationEnabled: Boolean
+            val persistentTimerNotificationEnabled: Boolean,
         )
 
         fun getAllSettings(): NotificationPreferences =
@@ -66,7 +66,7 @@ class NotificationSettings
                 milestoneNotificationsEnabled = isMilestoneNotificationsEnabled,
                 soundEnabled = isNotificationSoundEnabled,
                 vibrationEnabled = isNotificationVibrationEnabled,
-                persistentTimerNotificationEnabled = isPersistentTimerNotificationEnabled
+                persistentTimerNotificationEnabled = isPersistentTimerNotificationEnabled,
             )
 
         fun resetToDefaults() {

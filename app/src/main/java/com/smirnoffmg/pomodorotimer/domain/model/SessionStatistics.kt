@@ -9,7 +9,7 @@ data class DailyStatistics(
     val longBreakSessions: Int,
     val totalWorkDuration: Long,
     val totalBreakDuration: Long,
-    val completionRate: Float = if (totalSessions > 0) completedSessions.toFloat() / totalSessions else 0f
+    val completionRate: Float = if (totalSessions > 0) completedSessions.toFloat() / totalSessions else 0f,
 ) {
     companion object {
         fun empty() =
@@ -21,7 +21,7 @@ data class DailyStatistics(
                 shortBreakSessions = 0,
                 longBreakSessions = 0,
                 totalWorkDuration = 0L,
-                totalBreakDuration = 0L
+                totalBreakDuration = 0L,
             )
     }
 }
@@ -37,7 +37,7 @@ data class WeeklyStatistics(
     val totalWorkDuration: Long,
     val totalBreakDuration: Long,
     val averageDailyWorkTime: Long,
-    val completionRate: Float = if (totalSessions > 0) completedSessions.toFloat() / totalSessions else 0f
+    val completionRate: Float = if (totalSessions > 0) completedSessions.toFloat() / totalSessions else 0f,
 )
 
 data class MonthlyStatistics(
@@ -51,7 +51,7 @@ data class MonthlyStatistics(
     val totalWorkDuration: Long,
     val totalBreakDuration: Long,
     val averageDailyWorkTime: Long,
-    val completionRate: Float = if (totalSessions > 0) completedSessions.toFloat() / totalSessions else 0f
+    val completionRate: Float = if (totalSessions > 0) completedSessions.toFloat() / totalSessions else 0f,
 )
 
 data class SessionTypeStatistics(
@@ -60,11 +60,11 @@ data class SessionTypeStatistics(
     val completedCount: Int,
     val totalDuration: Long,
     val averageDuration: Double,
-    val completionRate: Float = if (totalCount > 0) completedCount.toFloat() / totalCount else 0f
+    val completionRate: Float = if (totalCount > 0) completedCount.toFloat() / totalCount else 0f,
 )
 
 data class StreakStatistics(
     val currentStreak: Int,
     val longestStreak: Int,
-    val streakType: SessionType
+    val streakType: SessionType,
 )

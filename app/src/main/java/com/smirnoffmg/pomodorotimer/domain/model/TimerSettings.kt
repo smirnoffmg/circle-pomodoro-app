@@ -7,7 +7,7 @@ data class TimerSettings(
     val longBreakDurationMinutes: Int = 15,
     val sessionsBeforeLongBreak: Int = 4,
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
 ) {
     companion object {
         fun getDefaultSettings() = TimerSettings()

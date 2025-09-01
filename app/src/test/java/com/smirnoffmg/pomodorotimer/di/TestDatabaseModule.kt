@@ -20,7 +20,7 @@ import javax.inject.Singleton
 @Module
 @TestInstallIn(
     components = [SingletonComponent::class],
-    replaces = [DatabaseModule::class]
+    replaces = [DatabaseModule::class],
 )
 object TestDatabaseModule {
     private const val TEST_DATABASE_NAME = "test_pomodoro_database"
@@ -35,7 +35,7 @@ object TestDatabaseModule {
         Room
             .inMemoryDatabaseBuilder(
                 ApplicationProvider.getApplicationContext<Context>(),
-                PomodoroDatabase::class.java
+                PomodoroDatabase::class.java,
             ).allowMainThreadQueries() // Allow main thread queries for testing
             .build()
 

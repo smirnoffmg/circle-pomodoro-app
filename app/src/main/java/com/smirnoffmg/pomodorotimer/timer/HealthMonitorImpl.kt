@@ -13,7 +13,7 @@ class HealthMonitorImpl
     constructor(
         @ApplicationContext private val context: Context,
         private val timerStateManager: TimerStateManager,
-        private val alarmScheduler: AlarmScheduler
+        private val alarmScheduler: AlarmScheduler,
     ) : HealthMonitor {
         companion object {
             private const val FAILOVER_TIMEOUT_MS = 5_000L
@@ -22,19 +22,19 @@ class HealthMonitorImpl
 
         override fun handleBackupAlarmTrigger() {
             if (timerStateManager.timerState.value != TimerRedundancyState.RUNNING) return
-        
+
             val elapsed = System.currentTimeMillis() - timerStateManager.getTimerStartTime()
             val expectedRemaining = (timerStateManager.getTimerDurationMs() - elapsed).coerceAtLeast(0L)
-        
+
             if (expectedRemaining <= COMPLETION_TOLERANCE_MS) {
                 timerStateManager.setHealthStatus(TimerHealthStatus.FAILOVER_ACTIVATED)
-            
+
                 ServiceUtils.startService(
                     context = context,
                     serviceClass = TimerForegroundService::class.java,
-                    action = TimerForegroundService.ACTION_TIMER_COMPLETE
+                    action = TimerForegroundService.ACTION_TIMER_COMPLETE,
                 )
-            
+
                 timerStateManager.stopTimer()
             } else {
                 alarmScheduler.scheduleBackupAlarm(expectedRemaining)
@@ -44,7 +44,7 @@ class HealthMonitorImpl
         override fun handleHealthCheckTrigger() {
             val now = System.currentTimeMillis()
             val timeSinceLastHeartbeat = now - timerStateManager.getLastHealthCheck()
-        
+
             if (timerStateManager.timerState.value == TimerRedundancyState.RUNNING) {
                 if (timeSinceLastHeartbeat > FAILOVER_TIMEOUT_MS) {
                     timerStateManager.setHealthStatus(TimerHealthStatus.PRIMARY_UNRESPONSIVE)
@@ -57,20 +57,20 @@ class HealthMonitorImpl
 
         override fun handleFailoverTrigger() {
             if (timerStateManager.timerState.value != TimerRedundancyState.RUNNING) return
-        
+
             timerStateManager.setHealthStatus(TimerHealthStatus.FAILOVER_ACTIVATED)
-        
+
             val elapsed = System.currentTimeMillis() - timerStateManager.getTimerStartTime()
             val remaining = (timerStateManager.getTimerDurationMs() - elapsed).coerceAtLeast(0L)
-        
+
             if (remaining > 0) {
                 ServiceUtils.startService(
                     context = context,
                     serviceClass = TimerForegroundService::class.java,
                     action = TimerForegroundService.ACTION_START_TIMER,
-                    extras = mapOf(TimerForegroundService.EXTRA_DURATION to (remaining / 1000L))
+                    extras = mapOf(TimerForegroundService.EXTRA_DURATION to (remaining / 1000L)),
                 )
-            
+
                 timerStateManager.resumeTimer(remaining)
                 alarmScheduler.scheduleBackupAlarm(remaining)
                 alarmScheduler.scheduleHealthCheck()
@@ -81,7 +81,7 @@ class HealthMonitorImpl
 
         override fun checkForDrift(
             currentRemainingMs: Long,
-            expectedRemainingMs: Long
+            expectedRemainingMs: Long,
         ): Boolean {
             val drift = kotlin.math.abs(currentRemainingMs - expectedRemainingMs)
             return drift > 2_000L

@@ -27,11 +27,11 @@ abstract class PomodoroDatabase : RoomDatabase() {
             object : Migration(1, 2) {
                 override fun migrate(db: SupportSQLiteDatabase) {
                     val currentTime = System.currentTimeMillis()
-                    
+
                     // Add new columns to pomodoro_sessions table
                     db.execSQL("ALTER TABLE pomodoro_sessions ADD COLUMN createdAt INTEGER NOT NULL DEFAULT $currentTime")
                     db.execSQL("ALTER TABLE pomodoro_sessions ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT $currentTime")
-                
+
                     // Create indexes for better query performance
                     db.execSQL("CREATE INDEX index_pomodoro_sessions_startTime ON pomodoro_sessions(startTime)")
                     db.execSQL("CREATE INDEX index_pomodoro_sessions_type ON pomodoro_sessions(type)")
@@ -39,7 +39,7 @@ abstract class PomodoroDatabase : RoomDatabase() {
                     db.execSQL("CREATE INDEX index_pomodoro_sessions_startTime_type ON pomodoro_sessions(startTime, type)")
                 }
             }
-        
+
         val MIGRATION_2_3 =
             object : Migration(2, 3) {
                 override fun migrate(db: SupportSQLiteDatabase) {
@@ -47,14 +47,15 @@ abstract class PomodoroDatabase : RoomDatabase() {
                     db.execSQL("DROP TABLE IF EXISTS timer_records")
                 }
             }
-        
+
         val MIGRATION_3_4 =
             object : Migration(3, 4) {
                 override fun migrate(db: SupportSQLiteDatabase) {
                     val currentTime = System.currentTimeMillis()
-                    
+
                     // Create timer_settings table
-                    db.execSQL("""
+                    db.execSQL(
+                        """
                     CREATE TABLE timer_settings (
                         id INTEGER PRIMARY KEY NOT NULL,
                         workDurationMinutes INTEGER NOT NULL DEFAULT 25,
@@ -64,16 +65,19 @@ abstract class PomodoroDatabase : RoomDatabase() {
                         createdAt INTEGER NOT NULL DEFAULT 0,
                         updatedAt INTEGER NOT NULL DEFAULT 0
                     )
-                """)
-                
+                """,
+                    )
+
                     // Insert default settings
-                    db.execSQL("""
+                    db.execSQL(
+                        """
                     INSERT INTO timer_settings (
                         id, workDurationMinutes, shortBreakDurationMinutes, 
                         longBreakDurationMinutes, sessionsBeforeLongBreak, 
                         createdAt, updatedAt
                     ) VALUES (1, 25, 5, 15, 4, $currentTime, $currentTime)
-                """)
+                """,
+                    )
                 }
             }
     }

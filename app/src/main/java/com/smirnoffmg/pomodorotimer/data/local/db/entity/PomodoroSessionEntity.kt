@@ -10,8 +10,8 @@ import androidx.room.PrimaryKey
         Index(value = ["startTime"]),
         Index(value = ["type"]),
         Index(value = ["isCompleted"]),
-        Index(value = ["startTime", "type"])
-    ]
+        Index(value = ["startTime", "type"]),
+    ],
 )
 data class PomodoroSessionEntity(
     @PrimaryKey(autoGenerate = true)

@@ -56,11 +56,11 @@ class PomodoroRepositoryImpl
         override suspend fun getDailyStatistics(date: Long): DailyStatistics {
             val sessions = getSessionsByDate(date)
             val completedSessions = sessions.filter { it.isCompleted }
-            
+
             val workSessions = completedSessions.count { it.type == SessionType.WORK }
             val shortBreakSessions = completedSessions.count { it.type == SessionType.SHORT_BREAK }
             val longBreakSessions = completedSessions.count { it.type == SessionType.LONG_BREAK }
-            
+
             val totalWorkDuration =
                 completedSessions
                     .filter { it.type == SessionType.WORK }
@@ -78,19 +78,19 @@ class PomodoroRepositoryImpl
                 shortBreakSessions = shortBreakSessions,
                 longBreakSessions = longBreakSessions,
                 totalWorkDuration = totalWorkDuration,
-                totalBreakDuration = totalBreakDuration
+                totalBreakDuration = totalBreakDuration,
             )
         }
 
         // Weekly aggregation
         override suspend fun getSessionsByWeek(
             weekStart: Long,
-            weekEnd: Long
+            weekEnd: Long,
         ): List<PomodoroSession> = pomodoroSessionDao.getSessionsByWeek(weekStart, weekEnd).map { it.toDomain() }
 
         override fun getSessionsByWeekFlow(
             weekStart: Long,
-            weekEnd: Long
+            weekEnd: Long,
         ): Flow<List<PomodoroSession>> =
             pomodoroSessionDao.getSessionsByWeekFlow(weekStart, weekEnd).map { sessions ->
                 sessions.map { it.toDomain() }
@@ -98,15 +98,15 @@ class PomodoroRepositoryImpl
 
         override suspend fun getWeeklyStatistics(
             weekStart: Long,
-            weekEnd: Long
+            weekEnd: Long,
         ): WeeklyStatistics {
             val sessions = getSessionsByWeek(weekStart, weekEnd)
             val completedSessions = sessions.filter { it.isCompleted }
-            
+
             val workSessions = completedSessions.count { it.type == SessionType.WORK }
             val shortBreakSessions = completedSessions.count { it.type == SessionType.SHORT_BREAK }
             val longBreakSessions = completedSessions.count { it.type == SessionType.LONG_BREAK }
-            
+
             val totalWorkDuration =
                 completedSessions
                     .filter { it.type == SessionType.WORK }
@@ -129,19 +129,19 @@ class PomodoroRepositoryImpl
                 longBreakSessions = longBreakSessions,
                 totalWorkDuration = totalWorkDuration,
                 totalBreakDuration = totalBreakDuration,
-                averageDailyWorkTime = averageDailyWorkTime
+                averageDailyWorkTime = averageDailyWorkTime,
             )
         }
 
         // Monthly aggregation
         override suspend fun getSessionsByMonth(
             monthStart: Long,
-            monthEnd: Long
+            monthEnd: Long,
         ): List<PomodoroSession> = pomodoroSessionDao.getSessionsByMonth(monthStart, monthEnd).map { it.toDomain() }
 
         override fun getSessionsByMonthFlow(
             monthStart: Long,
-            monthEnd: Long
+            monthEnd: Long,
         ): Flow<List<PomodoroSession>> =
             pomodoroSessionDao.getSessionsByMonthFlow(monthStart, monthEnd).map { sessions ->
                 sessions.map { it.toDomain() }
@@ -149,15 +149,15 @@ class PomodoroRepositoryImpl
 
         override suspend fun getMonthlyStatistics(
             monthStart: Long,
-            monthEnd: Long
+            monthEnd: Long,
         ): MonthlyStatistics {
             val sessions = getSessionsByMonth(monthStart, monthEnd)
             val completedSessions = sessions.filter { it.isCompleted }
-            
+
             val workSessions = completedSessions.count { it.type == SessionType.WORK }
             val shortBreakSessions = completedSessions.count { it.type == SessionType.SHORT_BREAK }
             val longBreakSessions = completedSessions.count { it.type == SessionType.LONG_BREAK }
-            
+
             val totalWorkDuration =
                 completedSessions
                     .filter { it.type == SessionType.WORK }
@@ -180,14 +180,14 @@ class PomodoroRepositoryImpl
                 longBreakSessions = longBreakSessions,
                 totalWorkDuration = totalWorkDuration,
                 totalBreakDuration = totalBreakDuration,
-                averageDailyWorkTime = averageDailyWorkTime
+                averageDailyWorkTime = averageDailyWorkTime,
             )
         }
 
         // Statistics and analytics
         override suspend fun getSessionTypeStatistics(
             fromDate: Long,
-            sessionType: SessionType
+            sessionType: SessionType,
         ): SessionTypeStatistics {
             val sessionTypeString =
                 when (sessionType) {
@@ -195,14 +195,18 @@ class PomodoroRepositoryImpl
                     SessionType.SHORT_BREAK -> "SHORT_BREAK"
                     SessionType.LONG_BREAK -> "LONG_BREAK"
                 }
-            
+
             val totalCount =
                 pomodoroSessionDao.getCompletedSessionsCountByWeekAndType(
-                    fromDate, Long.MAX_VALUE, sessionTypeString
+                    fromDate,
+                    Long.MAX_VALUE,
+                    sessionTypeString,
                 )
             val totalDuration =
                 pomodoroSessionDao.getTotalDurationByWeekAndType(
-                    fromDate, Long.MAX_VALUE, sessionTypeString
+                    fromDate,
+                    Long.MAX_VALUE,
+                    sessionTypeString,
                 ) ?: 0L
             val averageDuration = pomodoroSessionDao.getAverageDurationByType(sessionTypeString, fromDate) ?: 0.0
 
@@ -211,7 +215,7 @@ class PomodoroRepositoryImpl
                 totalCount = totalCount,
                 completedCount = totalCount, // All counted sessions are completed
                 totalDuration = totalDuration,
-                averageDuration = averageDuration
+                averageDuration = averageDuration,
             )
         }
 
@@ -220,7 +224,7 @@ class PomodoroRepositoryImpl
 
         override suspend fun getAverageDurationByType(
             sessionType: SessionType,
-            fromDate: Long
+            fromDate: Long,
         ): Double {
             val sessionTypeString =
                 when (sessionType) {

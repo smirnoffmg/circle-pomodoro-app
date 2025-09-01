@@ -5,8 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
-import com.smirnoffmg.pomodorotimer.presentation.viewmodel.TimerState
 import com.smirnoffmg.pomodorotimer.domain.usecase.GetTimerSettingsUseCase
+import com.smirnoffmg.pomodorotimer.presentation.viewmodel.TimerState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -26,7 +26,7 @@ class TimerServiceManager
     @Inject
     constructor(
         private val context: Context,
-        private val getTimerSettingsUseCase: GetTimerSettingsUseCase
+        private val getTimerSettingsUseCase: GetTimerSettingsUseCase,
     ) {
         private var service: TimerForegroundService? = null
         private var isBound = false
@@ -41,13 +41,13 @@ class TimerServiceManager
         // Local state flows that get updated when service is bound
         private val _timerState = MutableStateFlow(TimerState.STOPPED)
         val timerState: StateFlow<TimerState> = _timerState.asStateFlow()
-    
+
         private val _remainingTime = MutableStateFlow(25 * 60L) // Will be updated with actual settings
         val remainingTime: StateFlow<Long> = _remainingTime.asStateFlow()
-    
+
         private val _progress = MutableStateFlow(1f)
         val progress: StateFlow<Float> = _progress.asStateFlow()
-    
+
         private val _cycleType = MutableStateFlow(TimerForegroundService.CycleType.WORK)
         val cycleType: StateFlow<TimerForegroundService.CycleType> = _cycleType.asStateFlow()
 
@@ -62,7 +62,7 @@ class TimerServiceManager
             object : ServiceConnection {
                 override fun onServiceConnected(
                     name: ComponentName?,
-                    binder: IBinder?
+                    binder: IBinder?,
                 ) {
                     val timerBinder = binder as TimerForegroundService.TimerBinder
                     service = timerBinder.getService()
@@ -81,7 +81,7 @@ class TimerServiceManager
             ServiceUtils.startService(
                 context = context,
                 serviceClass = TimerForegroundService::class.java,
-                action = TimerForegroundService.ACTION_START_TIMER
+                action = TimerForegroundService.ACTION_START_TIMER,
             )
             bindService()
         }
@@ -90,7 +90,7 @@ class TimerServiceManager
             ServiceUtils.startService(
                 context = context,
                 serviceClass = TimerForegroundService::class.java,
-                action = TimerForegroundService.ACTION_PAUSE_TIMER
+                action = TimerForegroundService.ACTION_PAUSE_TIMER,
             )
         }
 
@@ -98,7 +98,7 @@ class TimerServiceManager
             ServiceUtils.startService(
                 context = context,
                 serviceClass = TimerForegroundService::class.java,
-                action = TimerForegroundService.ACTION_STOP_TIMER
+                action = TimerForegroundService.ACTION_STOP_TIMER,
             )
             unbindService()
         }
@@ -108,7 +108,7 @@ class TimerServiceManager
                 context = context,
                 serviceClass = TimerForegroundService::class.java,
                 action = TimerForegroundService.ACTION_SET_DURATION,
-                extras = mapOf(TimerForegroundService.EXTRA_DURATION to durationInSeconds)
+                extras = mapOf(TimerForegroundService.EXTRA_DURATION to durationInSeconds),
             )
         }
 
@@ -116,7 +116,7 @@ class TimerServiceManager
             ServiceUtils.startService(
                 context = context,
                 serviceClass = TimerForegroundService::class.java,
-                action = TimerForegroundService.ACTION_SKIP_BREAK
+                action = TimerForegroundService.ACTION_SKIP_BREAK,
             )
         }
 
@@ -182,13 +182,13 @@ class TimerServiceManager
                 try {
                     // Cancel previous flow collections to prevent memory leaks
                     cancelFlowCollections()
-                    
+
                     // Update local state flows with current service state
                     _timerState.value = serviceInstance.timerState.value
                     _remainingTime.value = serviceInstance.remainingTime.value
                     _progress.value = serviceInstance.progress.value
                     _cycleType.value = serviceInstance.cycleType.value
-                
+
                     // Set up continuous sync with proper job tracking
                     timerStateJob = serviceInstance.timerState.onEach { _timerState.value = it }.launchIn(scope)
                     remainingTimeJob = serviceInstance.remainingTime.onEach { _remainingTime.value = it }.launchIn(scope)
@@ -208,7 +208,7 @@ class TimerServiceManager
             remainingTimeJob?.cancel()
             progressJob?.cancel()
             cycleTypeJob?.cancel()
-            
+
             timerStateJob = null
             remainingTimeJob = null
             progressJob = null

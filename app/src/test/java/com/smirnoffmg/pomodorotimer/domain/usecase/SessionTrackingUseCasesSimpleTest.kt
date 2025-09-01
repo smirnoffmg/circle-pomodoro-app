@@ -17,7 +17,7 @@ import org.mockito.kotlin.whenever
 class SessionTrackingUseCasesSimpleTest : BaseUnitTest() {
     @Mock
     private lateinit var mockRepository: PomodoroRepository
-    
+
     private lateinit var startSessionUseCase: StartSessionUseCase
     private lateinit var completeSessionUseCase: CompleteSessionUseCase
     private lateinit var cancelSessionUseCase: CancelSessionUseCase
@@ -38,9 +38,9 @@ class SessionTrackingUseCasesSimpleTest : BaseUnitTest() {
             val duration = 25 * 60 * 1000L
             val expectedId = 123L
             whenever(mockRepository.insertSession(any())).thenReturn(expectedId)
-        
+
             val result = startSessionUseCase(sessionType, duration)
-        
+
             assertThat(result).isEqualTo(expectedId)
             verify(mockRepository).insertSession(any())
         }
@@ -51,9 +51,9 @@ class SessionTrackingUseCasesSimpleTest : BaseUnitTest() {
             val sessionId = 1L
             val session = createTestSession(id = sessionId, isCompleted = false)
             whenever(mockRepository.getSessionById(sessionId)).thenReturn(session)
-        
+
             val result = completeSessionUseCase(sessionId)
-        
+
             assertThat(result.isSuccess).isTrue()
             verify(mockRepository).updateSessionCompletion(any(), any(), any())
         }
@@ -63,9 +63,9 @@ class SessionTrackingUseCasesSimpleTest : BaseUnitTest() {
         runTest {
             val sessionId = 1L
             whenever(mockRepository.getSessionById(sessionId)).thenReturn(null)
-        
+
             val result = completeSessionUseCase(sessionId)
-        
+
             assertThat(result.isFailure).isTrue()
         }
 
@@ -75,9 +75,9 @@ class SessionTrackingUseCasesSimpleTest : BaseUnitTest() {
             val sessionId = 1L
             val session = createTestSession(id = sessionId, isCompleted = true)
             whenever(mockRepository.getSessionById(sessionId)).thenReturn(session)
-        
+
             val result = completeSessionUseCase(sessionId)
-        
+
             assertThat(result.isFailure).isTrue()
         }
 
@@ -87,9 +87,9 @@ class SessionTrackingUseCasesSimpleTest : BaseUnitTest() {
             val sessionId = 1L
             val session = createTestSession(id = sessionId, isCompleted = false)
             whenever(mockRepository.getSessionById(sessionId)).thenReturn(session)
-        
+
             val result = cancelSessionUseCase(sessionId)
-        
+
             assertThat(result.isSuccess).isTrue()
             verify(mockRepository).deleteSession(sessionId)
         }
@@ -100,9 +100,9 @@ class SessionTrackingUseCasesSimpleTest : BaseUnitTest() {
             val sessionId = 1L
             val session = createTestSession(id = sessionId, isCompleted = true)
             whenever(mockRepository.getSessionById(sessionId)).thenReturn(session)
-        
+
             val result = cancelSessionUseCase(sessionId)
-        
+
             assertThat(result.isFailure).isTrue()
         }
 
@@ -112,7 +112,7 @@ class SessionTrackingUseCasesSimpleTest : BaseUnitTest() {
         endTime: Long? = null,
         duration: Long = 25 * 60 * 1000L,
         isCompleted: Boolean = false,
-        type: SessionType = SessionType.WORK
+        type: SessionType = SessionType.WORK,
     ) = PomodoroSession(
         id = id,
         startTime = startTime,
@@ -121,6 +121,6 @@ class SessionTrackingUseCasesSimpleTest : BaseUnitTest() {
         isCompleted = isCompleted,
         type = type,
         createdAt = System.currentTimeMillis(),
-        updatedAt = System.currentTimeMillis()
+        updatedAt = System.currentTimeMillis(),
     )
 }

@@ -19,7 +19,7 @@ class NotificationHelper
     constructor(
         @ApplicationContext private val context: Context,
         private val channelManager: NotificationChannelManager,
-        private val notificationSettings: NotificationSettings
+        private val notificationSettings: NotificationSettings,
     ) {
         companion object {
             const val TIMER_NOTIFICATION_ID = 1001
@@ -27,7 +27,7 @@ class NotificationHelper
             const val BREAK_END_NOTIFICATION_ID = 1003
             const val SESSION_COMPLETE_NOTIFICATION_ID = 1004
             const val MILESTONE_NOTIFICATION_ID = 1005
-        
+
             private const val PAUSE_ACTION_CODE = 100
             private const val RESUME_ACTION_CODE = 101
             private const val STOP_ACTION_CODE = 102
@@ -41,7 +41,7 @@ class NotificationHelper
         fun createTimerNotification(
             remainingTime: String,
             cycleType: String,
-            isRunning: Boolean
+            isRunning: Boolean,
         ): android.app.Notification? {
             if (!notificationSettings.isPersistentTimerNotificationEnabled) {
                 return null
@@ -51,15 +51,17 @@ class NotificationHelper
                 Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
-        
+
             val pendingIntent =
                 PendingIntent.getActivity(
-                    context, 0, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    context,
+                    0,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
-        
+
             val stateText = if (isRunning) cycleType else "Paused"
-        
+
             val builder =
                 NotificationCompat
                     .Builder(context, NotificationChannelManager.TIMER_CHANNEL_ID)
@@ -70,7 +72,7 @@ class NotificationHelper
                     .setOngoing(true)
                     .setSilent(true)
                     .setPriority(NotificationCompat.PRIORITY_LOW)
-        
+
             if (isRunning) {
                 builder.addAction(createPauseAction())
                 builder.addAction(createStopAction())
@@ -78,14 +80,14 @@ class NotificationHelper
                 builder.addAction(createResumeAction())
                 builder.addAction(createStopAction())
             }
-        
+
             return builder.build()
         }
 
         fun createBreakNotification(
             remainingTime: String,
             breakType: String,
-            isRunning: Boolean
+            isRunning: Boolean,
         ): android.app.Notification? {
             if (!notificationSettings.isPersistentTimerNotificationEnabled) {
                 return null
@@ -95,15 +97,17 @@ class NotificationHelper
                 Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
-        
+
             val pendingIntent =
                 PendingIntent.getActivity(
-                    context, 0, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    context,
+                    0,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
-        
+
             val stateText = if (isRunning) breakType else "Paused"
-        
+
             val builder =
                 NotificationCompat
                     .Builder(context, NotificationChannelManager.TIMER_CHANNEL_ID)
@@ -114,7 +118,7 @@ class NotificationHelper
                     .setOngoing(true)
                     .setSilent(true)
                     .setPriority(NotificationCompat.PRIORITY_LOW)
-        
+
             if (isRunning) {
                 builder.addAction(createSkipBreakAction())
                 builder.addAction(createStopAction())
@@ -122,7 +126,7 @@ class NotificationHelper
                 builder.addAction(createResumeAction())
                 builder.addAction(createStopAction())
             }
-        
+
             return builder.build()
         }
 
@@ -135,13 +139,15 @@ class NotificationHelper
                 Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
-        
+
             val pendingIntent =
                 PendingIntent.getActivity(
-                    context, 0, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    context,
+                    0,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
-        
+
             val notification =
                 NotificationCompat
                     .Builder(context, NotificationChannelManager.BREAKS_CHANNEL_ID)
@@ -154,7 +160,7 @@ class NotificationHelper
                     .setStyle(
                         NotificationCompat
                             .BigTextStyle()
-                            .bigText("Great work! Take a moment to rest and recharge. Your break has started.")
+                            .bigText("Great work! Take a moment to rest and recharge. Your break has started."),
                     ).apply {
                         if (notificationSettings.isNotificationSoundEnabled) {
                             setSound(getBreakSound())
@@ -163,7 +169,7 @@ class NotificationHelper
                             setVibrate(longArrayOf(0, 300, 200, 300))
                         }
                     }.build()
-        
+
             notificationManager.notify(BREAK_START_NOTIFICATION_ID, notification)
         }
 
@@ -176,13 +182,15 @@ class NotificationHelper
                 Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
-        
+
             val pendingIntent =
                 PendingIntent.getActivity(
-                    context, 0, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    context,
+                    0,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
-        
+
             val notification =
                 NotificationCompat
                     .Builder(context, NotificationChannelManager.BREAKS_CHANNEL_ID)
@@ -195,7 +203,7 @@ class NotificationHelper
                     .setStyle(
                         NotificationCompat
                             .BigTextStyle()
-                            .bigText("Your break is over. Ready to focus and be productive again?")
+                            .bigText("Your break is over. Ready to focus and be productive again?"),
                     ).apply {
                         if (notificationSettings.isNotificationSoundEnabled) {
                             setSound(getBreakSound())
@@ -204,7 +212,7 @@ class NotificationHelper
                             setVibrate(longArrayOf(0, 300, 200, 300))
                         }
                     }.build()
-        
+
             notificationManager.notify(BREAK_END_NOTIFICATION_ID, notification)
         }
 
@@ -219,20 +227,22 @@ class NotificationHelper
                 Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
-        
+
             val pendingIntent =
                 PendingIntent.getActivity(
-                    context, 0, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    context,
+                    0,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
-        
+
             val title = "Session Complete! 🍅"
             val text =
                 when (sessionCount) {
                     1 -> "Great start! You've completed your first session."
                     else -> "Well done! You've completed $sessionCount sessions."
                 }
-        
+
             val notification =
                 NotificationCompat
                     .Builder(context, NotificationChannelManager.PROGRESS_CHANNEL_ID)
@@ -251,7 +261,7 @@ class NotificationHelper
                             setVibrate(longArrayOf(0, 100, 100, 100))
                         }
                     }.build()
-        
+
             notificationManager.notify(SESSION_COMPLETE_NOTIFICATION_ID, notification)
         }
 
@@ -266,16 +276,18 @@ class NotificationHelper
                 Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
-        
+
             val pendingIntent =
                 PendingIntent.getActivity(
-                    context, 0, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    context,
+                    0,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
-        
+
             val title = "Milestone Reached! 🎉"
             val text = "Congratulations! You've completed $milestone productive sessions!"
-        
+
             val notification =
                 NotificationCompat
                     .Builder(context, NotificationChannelManager.PROGRESS_CHANNEL_ID)
@@ -294,7 +306,7 @@ class NotificationHelper
                             setVibrate(longArrayOf(0, 200, 100, 200, 100, 200))
                         }
                     }.build()
-        
+
             notificationManager.notify(MILESTONE_NOTIFICATION_ID, notification)
         }
 
@@ -313,14 +325,16 @@ class NotificationHelper
                 }
             val pendingIntent =
                 PendingIntent.getService(
-                    context, PAUSE_ACTION_CODE, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    context,
+                    PAUSE_ACTION_CODE,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
             return NotificationCompat.Action
                 .Builder(
                     android.R.drawable.ic_media_pause,
                     "Pause",
-                    pendingIntent
+                    pendingIntent,
                 ).build()
         }
 
@@ -331,14 +345,16 @@ class NotificationHelper
                 }
             val pendingIntent =
                 PendingIntent.getService(
-                    context, RESUME_ACTION_CODE, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    context,
+                    RESUME_ACTION_CODE,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
             return NotificationCompat.Action
                 .Builder(
                     android.R.drawable.ic_media_play,
                     "Resume",
-                    pendingIntent
+                    pendingIntent,
                 ).build()
         }
 
@@ -349,14 +365,16 @@ class NotificationHelper
                 }
             val pendingIntent =
                 PendingIntent.getService(
-                    context, STOP_ACTION_CODE, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    context,
+                    STOP_ACTION_CODE,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
             return NotificationCompat.Action
                 .Builder(
                     android.R.drawable.ic_menu_close_clear_cancel,
                     "Stop",
-                    pendingIntent
+                    pendingIntent,
                 ).build()
         }
 
@@ -367,14 +385,16 @@ class NotificationHelper
                 }
             val pendingIntent =
                 PendingIntent.getService(
-                    context, SKIP_BREAK_ACTION_CODE, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    context,
+                    SKIP_BREAK_ACTION_CODE,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
             return NotificationCompat.Action
                 .Builder(
                     android.R.drawable.ic_media_next,
                     "Skip",
-                    pendingIntent
+                    pendingIntent,
                 ).build()
         }
 

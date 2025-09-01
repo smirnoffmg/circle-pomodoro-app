@@ -13,24 +13,24 @@ import javax.inject.Singleton
 class AlarmSchedulerImpl
     @Inject
     constructor(
-        @ApplicationContext private val context: Context
+        @ApplicationContext private val context: Context,
     ) : AlarmScheduler {
         companion object {
             private const val BACKUP_ALARM_ACTION = "com.smirnoffmg.pomodorotimer.TIMER_BACKUP_ALARM"
             private const val HEALTH_CHECK_ACTION = "com.smirnoffmg.pomodorotimer.TIMER_HEALTH_CHECK"
             private const val FAILOVER_ACTION = "com.smirnoffmg.pomodorotimer.TIMER_FAILOVER"
-        
+
             private const val BACKUP_ALARM_REQUEST_CODE = 2001
             private const val HEALTH_CHECK_REQUEST_CODE = 2002
             private const val FAILOVER_REQUEST_CODE = 2003
-        
+
             private const val HEALTH_CHECK_INTERVAL = 15_000L
             private const val FAILOVER_TIMEOUT_MS = 5_000L
             private const val SAFETY_MARGIN_MS = 5_000L
         }
 
         private val alarmManager: AlarmManager by lazy {
-            context.getSystemService(Context.ALARM_SERVICE) as AlarmManager? 
+            context.getSystemService(Context.ALARM_SERVICE) as AlarmManager?
                 ?: throw IllegalStateException("AlarmManager not available")
         }
 
@@ -40,60 +40,60 @@ class AlarmSchedulerImpl
 
         override fun scheduleBackupAlarm(durationMs: Long) {
             cancelBackupAlarm()
-        
+
             val intent =
                 Intent(BACKUP_ALARM_ACTION).apply {
                     setPackage(context.packageName)
                 }
-        
+
             backupAlarmPendingIntent =
                 createPendingIntent(
                     context,
                     BACKUP_ALARM_REQUEST_CODE,
                     intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
-        
+
             val triggerTime = System.currentTimeMillis() + durationMs + SAFETY_MARGIN_MS
             scheduleExactAlarm(triggerTime, backupAlarmPendingIntent!!)
         }
 
         override fun scheduleHealthCheck() {
             cancelHealthCheckAlarm()
-        
+
             val intent =
                 Intent(HEALTH_CHECK_ACTION).apply {
                     setPackage(context.packageName)
                 }
-        
+
             healthCheckPendingIntent =
                 createPendingIntent(
                     context,
                     HEALTH_CHECK_REQUEST_CODE,
                     intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
-        
+
             val triggerTime = System.currentTimeMillis() + HEALTH_CHECK_INTERVAL
             scheduleExactAlarm(triggerTime, healthCheckPendingIntent!!)
         }
 
         override fun scheduleFailoverAlarm() {
             cancelFailoverAlarm()
-        
+
             val intent =
                 Intent(FAILOVER_ACTION).apply {
                     setPackage(context.packageName)
                 }
-        
+
             failoverPendingIntent =
                 createPendingIntent(
                     context,
                     FAILOVER_REQUEST_CODE,
                     intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
-        
+
             val triggerTime = System.currentTimeMillis() + FAILOVER_TIMEOUT_MS
             scheduleExactAlarm(triggerTime, failoverPendingIntent!!)
         }
@@ -129,25 +129,25 @@ class AlarmSchedulerImpl
             context: Context,
             requestCode: Int,
             intent: Intent,
-            flags: Int
+            flags: Int,
         ): PendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, flags)
 
         private fun scheduleExactAlarm(
             triggerTime: Long,
-            pendingIntent: PendingIntent
+            pendingIntent: PendingIntent,
         ) {
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     alarmManager.setExactAndAllowWhileIdle(
                         AlarmManager.RTC_WAKEUP,
                         triggerTime,
-                        pendingIntent
+                        pendingIntent,
                     )
                 } else {
                     alarmManager.setExact(
                         AlarmManager.RTC_WAKEUP,
                         triggerTime,
-                        pendingIntent
+                        pendingIntent,
                     )
                 }
             } catch (e: SecurityException) {

@@ -20,7 +20,7 @@ import kotlin.math.abs
 class TimerHealthMonitor
     @Inject
     constructor(
-        @ApplicationContext private val context: Context
+        @ApplicationContext private val context: Context,
     ) {
         companion object {
             private const val MAX_HEALTH_EVENTS = 100
@@ -32,7 +32,7 @@ class TimerHealthMonitor
         private val _healthEvents =
             MutableSharedFlow<TimerHealthEvent>(
                 replay = MAX_HEALTH_EVENTS,
-                extraBufferCapacity = MAX_HEALTH_EVENTS
+                extraBufferCapacity = MAX_HEALTH_EVENTS,
             )
         val healthEvents: SharedFlow<TimerHealthEvent> = _healthEvents.asSharedFlow()
 
@@ -49,22 +49,22 @@ class TimerHealthMonitor
         fun reportAccuracy(
             expectedRemainingMs: Long,
             actualRemainingMs: Long,
-            systemTimeMs: Long
+            systemTimeMs: Long,
         ) {
             val drift = abs(expectedRemainingMs - actualRemainingMs)
-        
+
             if (drift > WARNING_DRIFT_MS) {
                 totalDriftMs += drift
                 maxDriftMs = maxOf(maxDriftMs, drift)
                 driftEventCount++
-            
+
                 val severity =
                     when {
                         drift > CRITICAL_DRIFT_MS -> HealthEventSeverity.CRITICAL
                         drift > WARNING_DRIFT_MS -> HealthEventSeverity.WARNING
                         else -> HealthEventSeverity.INFO
                     }
-            
+
                 reportHealthEvent(
                     TimerHealthEvent(
                         type = HealthEventType.DRIFT_DETECTED,
@@ -75,12 +75,12 @@ class TimerHealthMonitor
                             mapOf(
                                 "drift_ms" to drift,
                                 "expected_ms" to expectedRemainingMs,
-                                "actual_ms" to actualRemainingMs
-                            )
-                    )
+                                "actual_ms" to actualRemainingMs,
+                            ),
+                    ),
                 )
             }
-        
+
             lastAccuracyCheck = systemTimeMs
         }
 
@@ -90,7 +90,7 @@ class TimerHealthMonitor
         fun reportSystemInterference(
             type: SystemInterferenceType,
             details: String,
-            impact: Long = 0L
+            impact: Long = 0L,
         ) {
             val severity =
                 when (type) {
@@ -100,7 +100,7 @@ class TimerHealthMonitor
                     SystemInterferenceType.PROCESS_KILLED -> HealthEventSeverity.CRITICAL
                     SystemInterferenceType.LOW_MEMORY -> HealthEventSeverity.WARNING
                 }
-        
+
             reportHealthEvent(
                 TimerHealthEvent(
                     type = HealthEventType.SYSTEM_INTERFERENCE,
@@ -112,9 +112,9 @@ class TimerHealthMonitor
                             "interference_type" to type.name,
                             "impact_ms" to impact,
                             "device_api" to Build.VERSION.SDK_INT,
-                            "device_model" to Build.MODEL
-                        )
-                )
+                            "device_model" to Build.MODEL,
+                        ),
+                ),
             )
         }
 
@@ -124,10 +124,10 @@ class TimerHealthMonitor
         fun reportFailover(
             reason: String,
             recoveryTimeMs: Long,
-            success: Boolean
+            success: Boolean,
         ) {
             failoverCount++
-        
+
             reportHealthEvent(
                 TimerHealthEvent(
                     type = HealthEventType.FAILOVER_ACTIVATED,
@@ -139,9 +139,9 @@ class TimerHealthMonitor
                             "reason" to reason,
                             "recovery_time_ms" to recoveryTimeMs,
                             "success" to success,
-                            "failover_count" to failoverCount
-                        )
-                )
+                            "failover_count" to failoverCount,
+                        ),
+                ),
             )
         }
 
@@ -150,7 +150,7 @@ class TimerHealthMonitor
          */
         fun reportServiceLifecycle(
             event: ServiceLifecycleEvent,
-            details: String = ""
+            details: String = "",
         ) {
             val severity =
                 when (event) {
@@ -160,7 +160,7 @@ class TimerHealthMonitor
                     ServiceLifecycleEvent.SERVICE_RECREATED -> HealthEventSeverity.WARNING
                     ServiceLifecycleEvent.FOREGROUND_REMOVED -> HealthEventSeverity.CRITICAL
                 }
-        
+
             reportHealthEvent(
                 TimerHealthEvent(
                     type = HealthEventType.SERVICE_LIFECYCLE,
@@ -170,9 +170,9 @@ class TimerHealthMonitor
                     data =
                         mapOf(
                             "lifecycle_event" to event.name,
-                            "details" to details
-                        )
-                )
+                            "details" to details,
+                        ),
+                ),
             )
         }
 
@@ -181,7 +181,7 @@ class TimerHealthMonitor
          */
         fun getHealthStatistics(): TimerHealthStatistics {
             val avgDrift = if (driftEventCount > 0) totalDriftMs / driftEventCount else 0L
-        
+
             return TimerHealthStatistics(
                 totalDriftMs = totalDriftMs,
                 maxDriftMs = maxDriftMs,
@@ -189,7 +189,7 @@ class TimerHealthMonitor
                 driftEventCount = driftEventCount,
                 failoverCount = failoverCount,
                 lastAccuracyCheck = lastAccuracyCheck,
-                uptime = System.currentTimeMillis() - lastAccuracyCheck
+                uptime = System.currentTimeMillis() - lastAccuracyCheck,
             )
         }
 
@@ -210,40 +210,42 @@ class TimerHealthMonitor
         fun getHealthRecommendations(): List<HealthRecommendation> {
             val recommendations = mutableListOf<HealthRecommendation>()
             val stats = getHealthStatistics()
-        
+
             if (stats.maxDriftMs > CRITICAL_DRIFT_MS) {
                 recommendations.add(
                     HealthRecommendation(
                         priority = RecommendationPriority.HIGH,
                         title = "Critical Timer Drift Detected",
                         description = "Timer has drifted by up to ${stats.maxDriftMs}ms. Consider checking battery optimization settings.",
-                        action = "Check battery optimization and background app restrictions"
-                    )
+                        action = "Check battery optimization and background app restrictions",
+                    ),
                 )
             }
-        
+
             if (stats.failoverCount > 3) {
                 recommendations.add(
                     HealthRecommendation(
                         priority = RecommendationPriority.HIGH,
                         title = "Frequent Failovers",
-                        description = "Timer has failed over ${stats.failoverCount} times. System may be aggressively managing background apps.",
-                        action = "Review app permissions and system battery settings"
-                    )
+                        description =
+                            "Timer has failed over ${stats.failoverCount} times. " +
+                                "System may be aggressively managing background apps.",
+                        action = "Review app permissions and system battery settings",
+                    ),
                 )
             }
-        
+
             if (stats.averageDriftMs > WARNING_DRIFT_MS) {
                 recommendations.add(
                     HealthRecommendation(
                         priority = RecommendationPriority.MEDIUM,
                         title = "Timer Accuracy Issues",
                         description = "Average timer drift is ${stats.averageDriftMs}ms. Performance could be improved.",
-                        action = "Close unnecessary background apps and ensure stable power supply"
-                    )
+                        action = "Close unnecessary background apps and ensure stable power supply",
+                    ),
                 )
             }
-        
+
             return recommendations
         }
 
@@ -261,7 +263,7 @@ data class TimerHealthEvent(
     val severity: HealthEventSeverity,
     val message: String,
     val timestamp: Long,
-    val data: Map<String, Any> = emptyMap()
+    val data: Map<String, Any> = emptyMap(),
 )
 
 /**
@@ -271,7 +273,7 @@ enum class HealthEventType {
     DRIFT_DETECTED,
     SYSTEM_INTERFERENCE,
     FAILOVER_ACTIVATED,
-    SERVICE_LIFECYCLE
+    SERVICE_LIFECYCLE,
 }
 
 /**
@@ -280,7 +282,7 @@ enum class HealthEventType {
 enum class HealthEventSeverity {
     INFO,
     WARNING,
-    CRITICAL
+    CRITICAL,
 }
 
 /**
@@ -291,7 +293,7 @@ enum class SystemInterferenceType {
     APP_STANDBY,
     BATTERY_OPTIMIZATION,
     PROCESS_KILLED,
-    LOW_MEMORY
+    LOW_MEMORY,
 }
 
 /**
@@ -302,7 +304,7 @@ enum class ServiceLifecycleEvent {
     SERVICE_STOPPED,
     SERVICE_KILLED,
     SERVICE_RECREATED,
-    FOREGROUND_REMOVED
+    FOREGROUND_REMOVED,
 }
 
 /**
@@ -315,7 +317,7 @@ data class TimerHealthStatistics(
     val driftEventCount: Int,
     val failoverCount: Int,
     val lastAccuracyCheck: Long,
-    val uptime: Long
+    val uptime: Long,
 )
 
 /**
@@ -325,7 +327,7 @@ data class HealthRecommendation(
     val priority: RecommendationPriority,
     val title: String,
     val description: String,
-    val action: String
+    val action: String,
 )
 
 /**
@@ -335,5 +337,5 @@ enum class RecommendationPriority {
     LOW,
     MEDIUM,
     HIGH,
-    CRITICAL
+    CRITICAL,
 }

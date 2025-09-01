@@ -6,7 +6,7 @@ import org.junit.Test
 
 /**
  * Circle Timer Tests - Minimalistic functionality verification
- * 
+ *
  * Tests core Circle concept features: reliability, simplicity, immediate value.
  */
 class CircleTimerTest {
@@ -54,9 +54,9 @@ class CircleTimerTest {
         val principles =
             listOf(
                 "zero cognitive overhead",
-                "immediate value delivery", 
+                "immediate value delivery",
                 "single-focus design",
-                "bulletproof reliability"
+                "bulletproof reliability",
             )
 
         // Then
@@ -73,7 +73,7 @@ class CircleTimerTest {
 
     private fun calculateProgress(
         remaining: Long,
-        total: Long
+        total: Long,
     ): Float =
         if (total > 0) {
             (remaining.toFloat() / total.toFloat()).coerceIn(0f, 1f)

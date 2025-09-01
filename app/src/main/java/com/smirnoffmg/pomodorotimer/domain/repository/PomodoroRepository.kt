@@ -35,49 +35,49 @@ interface PomodoroRepository {
 
     suspend fun getDailyStatistics(date: Long): DailyStatistics
 
-    // Weekly aggregation  
+    // Weekly aggregation
     suspend fun getSessionsByWeek(
         weekStart: Long,
-        weekEnd: Long
+        weekEnd: Long,
     ): List<PomodoroSession>
 
     fun getSessionsByWeekFlow(
         weekStart: Long,
-        weekEnd: Long
+        weekEnd: Long,
     ): Flow<List<PomodoroSession>>
 
     suspend fun getWeeklyStatistics(
         weekStart: Long,
-        weekEnd: Long
+        weekEnd: Long,
     ): WeeklyStatistics
 
     // Monthly aggregation
     suspend fun getSessionsByMonth(
         monthStart: Long,
-        monthEnd: Long
+        monthEnd: Long,
     ): List<PomodoroSession>
 
     fun getSessionsByMonthFlow(
         monthStart: Long,
-        monthEnd: Long
+        monthEnd: Long,
     ): Flow<List<PomodoroSession>>
 
     suspend fun getMonthlyStatistics(
         monthStart: Long,
-        monthEnd: Long
+        monthEnd: Long,
     ): MonthlyStatistics
 
     // Statistics and analytics
     suspend fun getSessionTypeStatistics(
         fromDate: Long,
-        sessionType: SessionType
+        sessionType: SessionType,
     ): SessionTypeStatistics
 
     suspend fun getTotalCompletedSessionsCount(fromDate: Long): Int
 
     suspend fun getAverageDurationByType(
         sessionType: SessionType,
-        fromDate: Long
+        fromDate: Long,
     ): Double
 
     // Data management

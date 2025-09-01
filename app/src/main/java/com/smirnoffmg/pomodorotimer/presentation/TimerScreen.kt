@@ -16,7 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.smirnoffmg.pomodorotimer.domain.model.PomodoroSession
 
 @Composable
-fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
+fun timerScreen(viewModel: TimerViewModel = hiltViewModel()) {
     val pomodoroSessions by viewModel.pomodoroSessions.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
@@ -26,13 +26,13 @@ fun TimerScreen(viewModel: TimerViewModel = hiltViewModel()) {
 
         LazyColumn(modifier = Modifier.weight(1f)) {
             items(pomodoroSessions) { session ->
-                PomodoroSessionItem(session)
+                pomodoroSessionItem(session)
             }
         }
     }
 }
 
 @Composable
-fun PomodoroSessionItem(session: PomodoroSession) {
+fun pomodoroSessionItem(session: PomodoroSession) {
     Text("Session: ${session.id}, Type: ${session.type}, Duration: ${session.duration / 1000}s, Completed: ${session.isCompleted}")
 }

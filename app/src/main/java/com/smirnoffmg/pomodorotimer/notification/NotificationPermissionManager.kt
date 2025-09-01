@@ -18,7 +18,7 @@ import javax.inject.Singleton
 class NotificationPermissionManager
     @Inject
     constructor(
-        @ApplicationContext private val context: Context
+        @ApplicationContext private val context: Context,
     ) {
         companion object {
             private const val NOTIFICATION_PERMISSION = Manifest.permission.POST_NOTIFICATIONS
@@ -28,7 +28,7 @@ class NotificationPermissionManager
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 ContextCompat.checkSelfPermission(
                     context,
-                    NOTIFICATION_PERMISSION
+                    NOTIFICATION_PERMISSION,
                 ) == PackageManager.PERMISSION_GRANTED
             } else {
                 // For versions below API 33, check if notifications are enabled
@@ -46,10 +46,10 @@ class NotificationPermissionManager
 
         fun createPermissionLauncher(
             activity: AppCompatActivity,
-            onPermissionResult: (Boolean) -> Unit
+            onPermissionResult: (Boolean) -> Unit,
         ): ActivityResultLauncher<String> =
             activity.registerForActivityResult(
-                ActivityResultContracts.RequestPermission()
+                ActivityResultContracts.RequestPermission(),
             ) { isGranted ->
                 onPermissionResult(isGranted)
             }
@@ -64,7 +64,7 @@ class NotificationPermissionManager
             activity: AppCompatActivity,
             onPermissionGranted: () -> Unit,
             onPermissionDenied: () -> Unit = {},
-            onShowRationale: () -> Unit = {}
+            onShowRationale: () -> Unit = {},
         ) {
             when {
                 isNotificationPermissionGranted() -> {
@@ -90,13 +90,13 @@ class NotificationPermissionManager
         data class PermissionStatus(
             val isGranted: Boolean,
             val areNotificationsEnabled: Boolean,
-            val needsRuntimePermission: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+            val needsRuntimePermission: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU,
         )
 
         fun getPermissionStatus(): PermissionStatus =
             PermissionStatus(
                 isGranted = isNotificationPermissionGranted(),
                 areNotificationsEnabled = areNotificationsEnabled(),
-                needsRuntimePermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                needsRuntimePermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU,
             )
     }

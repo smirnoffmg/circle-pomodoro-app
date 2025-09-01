@@ -8,7 +8,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.Configuration
 import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
-import org.junit.Assert.*
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,7 +18,7 @@ import org.robolectric.annotation.Config
 @RunWith(AndroidJUnit4::class)
 @Config(
     sdk = [Build.VERSION_CODES.TIRAMISU],
-    application = com.smirnoffmg.pomodorotimer.TestApplication::class
+    application = com.smirnoffmg.pomodorotimer.TestApplication::class,
 )
 class NotificationChannelManagerBasicTest {
     private lateinit var context: Context
@@ -26,7 +27,7 @@ class NotificationChannelManagerBasicTest {
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
-        
+
         // Initialize WorkManager for testing
         val config =
             Configuration
@@ -35,7 +36,7 @@ class NotificationChannelManagerBasicTest {
                 .setExecutor(SynchronousExecutor())
                 .build()
         WorkManagerTestInitHelper.initializeTestWorkManager(context, config)
-        
+
         notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
 
@@ -43,7 +44,7 @@ class NotificationChannelManagerBasicTest {
     fun `should create notification channels without throwing exception`() {
         // Create a simple NotificationChannelManager without Hilt
         val channelManager = SimpleNotificationChannelManager(context)
-        
+
         // When
         channelManager.createNotificationChannels()
 
@@ -55,7 +56,7 @@ class NotificationChannelManagerBasicTest {
     fun `should verify channels exist after creation`() {
         // Create a simple NotificationChannelManager without Hilt
         val channelManager = SimpleNotificationChannelManager(context)
-        
+
         // When
         channelManager.createNotificationChannels()
 
@@ -63,7 +64,7 @@ class NotificationChannelManagerBasicTest {
         val timerChannel = notificationManager.getNotificationChannel(NotificationChannelManager.TIMER_CHANNEL_ID)
         val breaksChannel = notificationManager.getNotificationChannel(NotificationChannelManager.BREAKS_CHANNEL_ID)
         val progressChannel = notificationManager.getNotificationChannel(NotificationChannelManager.PROGRESS_CHANNEL_ID)
-        
+
         assertNotNull("Timer channel should be created", timerChannel)
         assertNotNull("Breaks channel should be created", breaksChannel)
         assertNotNull("Progress channel should be created", progressChannel)
@@ -72,7 +73,7 @@ class NotificationChannelManagerBasicTest {
 
 // Simple version without Hilt for testing
 class SimpleNotificationChannelManager(
-    private val context: Context
+    private val context: Context,
 ) {
     private val notificationManager: NotificationManager by lazy {
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -93,7 +94,7 @@ class SimpleNotificationChannelManager(
                     .NotificationChannel(
                         NotificationChannelManager.TIMER_CHANNEL_ID,
                         "Timer Service",
-                        NotificationManager.IMPORTANCE_LOW
+                        NotificationManager.IMPORTANCE_LOW,
                     ).apply {
                         description = "Persistent timer service notification"
                         setShowBadge(false)
@@ -112,7 +113,7 @@ class SimpleNotificationChannelManager(
                     .NotificationChannel(
                         NotificationChannelManager.BREAKS_CHANNEL_ID,
                         "Break Notifications",
-                        NotificationManager.IMPORTANCE_DEFAULT
+                        NotificationManager.IMPORTANCE_DEFAULT,
                     ).apply {
                         description = "Break start and end notifications"
                         setShowBadge(true)
@@ -124,7 +125,7 @@ class SimpleNotificationChannelManager(
                                 .Builder()
                                 .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
                                 .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION)
-                                .build()
+                                .build(),
                         )
                     }
             notificationManager.createNotificationChannel(channel)
@@ -138,7 +139,7 @@ class SimpleNotificationChannelManager(
                     .NotificationChannel(
                         NotificationChannelManager.PROGRESS_CHANNEL_ID,
                         "Progress Updates",
-                        NotificationManager.IMPORTANCE_DEFAULT
+                        NotificationManager.IMPORTANCE_DEFAULT,
                     ).apply {
                         description = "Session completion and milestone notifications"
                         setShowBadge(true)
@@ -150,7 +151,7 @@ class SimpleNotificationChannelManager(
                                 .Builder()
                                 .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
                                 .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION)
-                                .build()
+                                .build(),
                         )
                     }
             notificationManager.createNotificationChannel(channel)

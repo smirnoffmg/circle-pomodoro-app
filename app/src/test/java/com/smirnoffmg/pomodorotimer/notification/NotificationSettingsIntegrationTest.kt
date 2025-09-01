@@ -6,7 +6,11 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,7 +32,7 @@ class NotificationSettingsIntegrationTest {
         channelManager = NotificationChannelManager(context)
         notificationSettings = NotificationSettings(context)
         notificationHelper = NotificationHelper(context, channelManager, notificationSettings)
-        
+
         // Reset settings to defaults
         notificationSettings.resetToDefaults()
     }
@@ -45,7 +49,7 @@ class NotificationSettingsIntegrationTest {
                 notificationHelper.createTimerNotification(
                     remainingTime = "25:00",
                     cycleType = "Work",
-                    isRunning = true
+                    isRunning = true,
                 )
 
             // Then - Should return null
@@ -64,7 +68,7 @@ class NotificationSettingsIntegrationTest {
                 notificationHelper.createTimerNotification(
                     remainingTime = "25:00",
                     cycleType = "Work",
-                    isRunning = true
+                    isRunning = true,
                 )
 
             // Then - Should return notification
@@ -85,7 +89,7 @@ class NotificationSettingsIntegrationTest {
                 notificationHelper.createBreakNotification(
                     remainingTime = "05:00",
                     breakType = "Short Break",
-                    isRunning = true
+                    isRunning = true,
                 )
 
             // Then - Should return null
@@ -104,7 +108,7 @@ class NotificationSettingsIntegrationTest {
                 notificationHelper.createBreakNotification(
                     remainingTime = "05:00",
                     breakType = "Short Break",
-                    isRunning = true
+                    isRunning = true,
                 )
 
             // Then - Should return notification
@@ -226,20 +230,20 @@ class NotificationSettingsIntegrationTest {
                 notificationHelper.createTimerNotification(
                     remainingTime = "25:00",
                     cycleType = "Work",
-                    isRunning = true
+                    isRunning = true,
                 )
 
             val breakNotification =
                 notificationHelper.createBreakNotification(
                     remainingTime = "05:00",
                     breakType = "Short Break",
-                    isRunning = true
+                    isRunning = true,
                 )
 
             // Then - Should have different icons
             assertNotNull("Timer notification should exist", timerNotification)
             assertNotNull("Break notification should exist", breakNotification)
-            
+
             // Note: We can't easily test the actual icon resource IDs in unit tests
             // but we can verify the notifications are created successfully
             assertTrue("Timer notification should have valid icon", true)

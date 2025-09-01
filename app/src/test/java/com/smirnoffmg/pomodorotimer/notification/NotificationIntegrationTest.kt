@@ -6,7 +6,9 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,7 +17,7 @@ import org.robolectric.annotation.Config
 @RunWith(AndroidJUnit4::class)
 @Config(
     sdk = [Build.VERSION_CODES.TIRAMISU],
-    application = com.smirnoffmg.pomodorotimer.TestApplication::class
+    application = com.smirnoffmg.pomodorotimer.TestApplication::class,
 )
 class NotificationIntegrationTest {
     private lateinit var context: Context
@@ -46,14 +48,14 @@ class NotificationIntegrationTest {
                 notificationHelper.createTimerNotification(
                     remainingTime = "25:00",
                     cycleType = "Work",
-                    isRunning = true
+                    isRunning = true,
                 )
-        
+
             val breakNotification =
                 notificationHelper.createBreakNotification(
-                    remainingTime = "05:00", 
+                    remainingTime = "05:00",
                     breakType = "Short Break",
-                    isRunning = true
+                    isRunning = true,
                 )
 
             // Show notifications
@@ -64,11 +66,11 @@ class NotificationIntegrationTest {
             // Then - Verify notifications were created successfully
             assertNotNull("Timer notification should be created", timerNotification)
             assertNotNull("Break notification should be created", breakNotification)
-        
+
             // Verify notification properties
             assertEquals("Pomodoro Timer", timerNotification?.extras?.getString("android.title"))
             assertEquals("25:00 - Work", timerNotification?.extras?.getString("android.text"))
-        
+
             assertEquals("Break Time", breakNotification?.extras?.getString("android.title"))
             assertEquals("05:00 - Short Break", breakNotification?.extras?.getString("android.text"))
 
@@ -76,7 +78,7 @@ class NotificationIntegrationTest {
             val timerChannel = notificationManager.getNotificationChannel(NotificationChannelManager.TIMER_CHANNEL_ID)
             val breaksChannel = notificationManager.getNotificationChannel(NotificationChannelManager.BREAKS_CHANNEL_ID)
             val progressChannel = notificationManager.getNotificationChannel(NotificationChannelManager.PROGRESS_CHANNEL_ID)
-        
+
             assertNotNull("Timer channel should exist", timerChannel)
             assertNotNull("Breaks channel should exist", breaksChannel)
             assertNotNull("Progress channel should exist", progressChannel)
@@ -92,22 +94,22 @@ class NotificationIntegrationTest {
             val runningTimerNotification =
                 notificationHelper.createTimerNotification(
                     remainingTime = "20:00",
-                    cycleType = "Work", 
-                    isRunning = true
+                    cycleType = "Work",
+                    isRunning = true,
                 )
-        
+
             val pausedTimerNotification =
                 notificationHelper.createTimerNotification(
                     remainingTime = "20:00",
                     cycleType = "Work",
-                    isRunning = false
+                    isRunning = false,
                 )
 
             val breakNotification =
                 notificationHelper.createBreakNotification(
                     remainingTime = "03:00",
                     breakType = "Short Break",
-                    isRunning = true
+                    isRunning = true,
                 )
 
             // Then - Verify action buttons
@@ -116,22 +118,34 @@ class NotificationIntegrationTest {
             assertEquals("Break notification should have 2 actions", 2, breakNotification?.actions?.size)
 
             // Verify specific actions for running timer
-            assertTrue("Should have Pause action", 
-                runningTimerNotification?.actions?.any { it.title == "Pause" } == true)
-            assertTrue("Should have Stop action",
-                runningTimerNotification?.actions?.any { it.title == "Stop" } == true)
+            assertTrue(
+                "Should have Pause action",
+                runningTimerNotification?.actions?.any { it.title == "Pause" } == true,
+            )
+            assertTrue(
+                "Should have Stop action",
+                runningTimerNotification?.actions?.any { it.title == "Stop" } == true,
+            )
 
             // Verify specific actions for paused timer
-            assertTrue("Should have Resume action",
-                pausedTimerNotification?.actions?.any { it.title == "Resume" } == true)
-            assertTrue("Should have Stop action", 
-                pausedTimerNotification?.actions?.any { it.title == "Stop" } == true)
+            assertTrue(
+                "Should have Resume action",
+                pausedTimerNotification?.actions?.any { it.title == "Resume" } == true,
+            )
+            assertTrue(
+                "Should have Stop action",
+                pausedTimerNotification?.actions?.any { it.title == "Stop" } == true,
+            )
 
             // Verify specific actions for break
-            assertTrue("Should have Skip action",
-                breakNotification?.actions?.any { it.title == "Skip" } == true)
-            assertTrue("Should have Stop action",
-                breakNotification?.actions?.any { it.title == "Stop" } == true)
+            assertTrue(
+                "Should have Skip action",
+                breakNotification?.actions?.any { it.title == "Skip" } == true,
+            )
+            assertTrue(
+                "Should have Stop action",
+                breakNotification?.actions?.any { it.title == "Stop" } == true,
+            )
         }
 
     @Test
@@ -139,7 +153,7 @@ class NotificationIntegrationTest {
         runTest {
             // Given
             channelManager.createNotificationChannels()
-        
+
             // Show some notifications
             notificationHelper.showBreakStartNotification("Short Break")
             notificationHelper.showSessionCompleteNotification(1)
@@ -165,9 +179,11 @@ class NotificationIntegrationTest {
 
             // Then
             assertNotNull("Status should not be null", status)
-            assertEquals("Runtime permission requirement should match API level",
+            assertEquals(
+                "Runtime permission requirement should match API level",
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU,
-                status.needsRuntimePermission)
+                status.needsRuntimePermission,
+            )
         }
 
     @Test
@@ -182,12 +198,21 @@ class NotificationIntegrationTest {
             val progressChannel = notificationManager.getNotificationChannel(NotificationChannelManager.PROGRESS_CHANNEL_ID)
 
             // Then
-            assertEquals("Timer channel should have LOW importance", 
-                NotificationManager.IMPORTANCE_LOW, timerChannel?.importance)
-            assertEquals("Breaks channel should have DEFAULT importance",
-                NotificationManager.IMPORTANCE_DEFAULT, breaksChannel?.importance)
-            assertEquals("Progress channel should have DEFAULT importance", 
-                NotificationManager.IMPORTANCE_DEFAULT, progressChannel?.importance)
+            assertEquals(
+                "Timer channel should have LOW importance",
+                NotificationManager.IMPORTANCE_LOW,
+                timerChannel?.importance,
+            )
+            assertEquals(
+                "Breaks channel should have DEFAULT importance",
+                NotificationManager.IMPORTANCE_DEFAULT,
+                breaksChannel?.importance,
+            )
+            assertEquals(
+                "Progress channel should have DEFAULT importance",
+                NotificationManager.IMPORTANCE_DEFAULT,
+                progressChannel?.importance,
+            )
         }
 
     @Test
@@ -198,12 +223,12 @@ class NotificationIntegrationTest {
 
             // When/Then - Test session count validation
             notificationHelper.showSessionCompleteNotification(-1) // Should be ignored
-            notificationHelper.showSessionCompleteNotification(0)  // Should be ignored
+            notificationHelper.showSessionCompleteNotification(0) // Should be ignored
             notificationHelper.showSessionCompleteNotification(1001) // Should be ignored
-        
+
             // When/Then - Test milestone validation
             notificationHelper.showMilestoneNotification(-1) // Should be ignored
-            notificationHelper.showMilestoneNotification(0)  // Should be ignored
+            notificationHelper.showMilestoneNotification(0) // Should be ignored
             notificationHelper.showMilestoneNotification(10001) // Should be ignored
 
             // Valid inputs should work

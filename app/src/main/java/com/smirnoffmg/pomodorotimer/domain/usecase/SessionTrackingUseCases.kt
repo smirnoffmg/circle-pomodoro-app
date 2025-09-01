@@ -13,11 +13,11 @@ import javax.inject.Inject
 class StartSessionUseCase
     @Inject
     constructor(
-        private val repository: PomodoroRepository
+        private val repository: PomodoroRepository,
     ) {
         suspend operator fun invoke(
             sessionType: SessionType,
-            duration: Long
+            duration: Long,
         ): Long {
             val currentTime = System.currentTimeMillis()
             val session =
@@ -28,7 +28,7 @@ class StartSessionUseCase
                     isCompleted = false,
                     type = sessionType,
                     createdAt = currentTime,
-                    updatedAt = currentTime
+                    updatedAt = currentTime,
                 )
             return repository.insertSession(session)
         }
@@ -37,18 +37,18 @@ class StartSessionUseCase
 class CompleteSessionUseCase
     @Inject
     constructor(
-        private val repository: PomodoroRepository
+        private val repository: PomodoroRepository,
     ) {
         suspend operator fun invoke(sessionId: Long): Result<Unit> {
             return try {
                 val session =
                     repository.getSessionById(sessionId)
                         ?: return Result.failure(IllegalArgumentException("Session not found"))
-            
+
                 if (session.isCompleted) {
                     return Result.failure(IllegalStateException("Session already completed"))
                 }
-            
+
                 val endTime = System.currentTimeMillis()
                 repository.updateSessionCompletion(sessionId, endTime, true)
                 Result.success(Unit)
@@ -61,18 +61,18 @@ class CompleteSessionUseCase
 class CancelSessionUseCase
     @Inject
     constructor(
-        private val repository: PomodoroRepository
+        private val repository: PomodoroRepository,
     ) {
         suspend operator fun invoke(sessionId: Long): Result<Unit> {
             return try {
                 val session =
                     repository.getSessionById(sessionId)
                         ?: return Result.failure(IllegalArgumentException("Session not found"))
-            
+
                 if (session.isCompleted) {
                     return Result.failure(IllegalStateException("Cannot cancel completed session"))
                 }
-            
+
                 repository.deleteSession(sessionId)
                 Result.success(Unit)
             } catch (e: Exception) {
@@ -84,7 +84,7 @@ class CancelSessionUseCase
 class GetDailyStatisticsUseCase
     @Inject
     constructor(
-        private val repository: PomodoroRepository
+        private val repository: PomodoroRepository,
     ) {
         suspend operator fun invoke(date: Long = System.currentTimeMillis()): DailyStatistics = repository.getDailyStatistics(date)
 
@@ -94,11 +94,11 @@ class GetDailyStatisticsUseCase
 class GetWeeklyStatisticsUseCase
     @Inject
     constructor(
-        private val repository: PomodoroRepository
+        private val repository: PomodoroRepository,
     ) {
         suspend operator fun invoke(weekStart: Long? = null): WeeklyStatistics {
             val calendar = Calendar.getInstance()
-        
+
             val start =
                 weekStart ?: run {
                     calendar.timeInMillis = System.currentTimeMillis()
@@ -109,11 +109,11 @@ class GetWeeklyStatisticsUseCase
                     calendar.set(Calendar.MILLISECOND, 0)
                     calendar.timeInMillis
                 }
-        
+
             calendar.timeInMillis = start
             calendar.add(Calendar.WEEK_OF_YEAR, 1)
             val end = calendar.timeInMillis
-        
+
             return repository.getWeeklyStatistics(start, end)
         }
     }
@@ -121,11 +121,11 @@ class GetWeeklyStatisticsUseCase
 class GetMonthlyStatisticsUseCase
     @Inject
     constructor(
-        private val repository: PomodoroRepository
+        private val repository: PomodoroRepository,
     ) {
         suspend operator fun invoke(monthStart: Long? = null): MonthlyStatistics {
             val calendar = Calendar.getInstance()
-        
+
             val start =
                 monthStart ?: run {
                     calendar.timeInMillis = System.currentTimeMillis()
@@ -136,11 +136,11 @@ class GetMonthlyStatisticsUseCase
                     calendar.set(Calendar.MILLISECOND, 0)
                     calendar.timeInMillis
                 }
-        
+
             calendar.timeInMillis = start
             calendar.add(Calendar.MONTH, 1)
             val end = calendar.timeInMillis
-        
+
             return repository.getMonthlyStatistics(start, end)
         }
     }
@@ -148,7 +148,7 @@ class GetMonthlyStatisticsUseCase
 class GetSessionsByDateUseCase
     @Inject
     constructor(
-        private val repository: PomodoroRepository
+        private val repository: PomodoroRepository,
     ) {
         fun invoke(date: Long): Flow<List<PomodoroSession>> = repository.getSessionsByDateFlow(date)
 
@@ -158,12 +158,12 @@ class GetSessionsByDateUseCase
 class GetProductivityStreakUseCase
     @Inject
     constructor(
-        private val repository: PomodoroRepository
+        private val repository: PomodoroRepository,
     ) {
         suspend operator fun invoke(sessionType: SessionType = SessionType.WORK): Int {
             val calendar = Calendar.getInstance()
             var streakDays = 0
-        
+
             // Check each day backwards until we find a day with no completed sessions
             for (dayOffset in 0..30) { // Check up to 30 days back
                 calendar.timeInMillis = System.currentTimeMillis()
@@ -172,7 +172,7 @@ class GetProductivityStreakUseCase
                 calendar.set(Calendar.MINUTE, 0)
                 calendar.set(Calendar.SECOND, 0)
                 calendar.set(Calendar.MILLISECOND, 0)
-            
+
                 val dayStats = repository.getDailyStatistics(calendar.timeInMillis)
                 val hasProductiveDay =
                     when (sessionType) {
@@ -180,7 +180,7 @@ class GetProductivityStreakUseCase
                         SessionType.SHORT_BREAK -> dayStats.shortBreakSessions > 0
                         SessionType.LONG_BREAK -> dayStats.longBreakSessions > 0
                     }
-            
+
                 if (hasProductiveDay) {
                     streakDays++
                 } else if (dayOffset > 0) {
@@ -188,7 +188,7 @@ class GetProductivityStreakUseCase
                     break
                 }
             }
-        
+
             return streakDays
         }
     }
@@ -196,14 +196,14 @@ class GetProductivityStreakUseCase
 class CleanupOldSessionsUseCase
     @Inject
     constructor(
-        private val repository: PomodoroRepository
+        private val repository: PomodoroRepository,
     ) {
         suspend operator fun invoke(daysToKeep: Int = 90): Result<Unit> =
             try {
                 val calendar = Calendar.getInstance()
                 calendar.add(Calendar.DAY_OF_YEAR, -daysToKeep)
                 val cutoffDate = calendar.timeInMillis
-            
+
                 repository.deleteSessionsBeforeDate(cutoffDate)
                 Result.success(Unit)
             } catch (e: Exception) {

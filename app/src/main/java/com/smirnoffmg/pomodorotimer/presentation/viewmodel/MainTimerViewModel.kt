@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.smirnoffmg.pomodorotimer.domain.model.DailyStatistics
 import com.smirnoffmg.pomodorotimer.domain.usecase.GetDailyStatisticsUseCase
-import com.smirnoffmg.pomodorotimer.service.TimerServiceManager
 import com.smirnoffmg.pomodorotimer.service.TimerForegroundService
+import com.smirnoffmg.pomodorotimer.service.TimerServiceManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +18,7 @@ class MainTimerViewModel
     @Inject
     constructor(
         private val serviceManager: TimerServiceManager,
-        private val getDailyStatisticsUseCase: GetDailyStatisticsUseCase
+        private val getDailyStatisticsUseCase: GetDailyStatisticsUseCase,
     ) : ViewModel() {
         val timerState: StateFlow<TimerState> = serviceManager.timerState
         val remainingTime: StateFlow<Long> = serviceManager.remainingTime
@@ -93,7 +93,7 @@ class MainTimerViewModel
         }
 
         fun isBreakSession(): Boolean =
-            cycleType.value == TimerForegroundService.CycleType.BREAK || 
+            cycleType.value == TimerForegroundService.CycleType.BREAK ||
                 cycleType.value == TimerForegroundService.CycleType.LONG_BREAK
 
         fun reloadTimerSettings() {
@@ -110,5 +110,5 @@ class MainTimerViewModel
 enum class TimerState {
     RUNNING,
     PAUSED,
-    STOPPED
+    STOPPED,
 }

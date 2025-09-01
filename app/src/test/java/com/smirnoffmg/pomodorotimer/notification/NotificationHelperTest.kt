@@ -4,21 +4,20 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.Mockito.*
-import org.mockito.MockitoAnnotations
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 @Config(
     sdk = [Build.VERSION_CODES.TIRAMISU],
-    application = com.smirnoffmg.pomodorotimer.TestApplication::class
+    application = com.smirnoffmg.pomodorotimer.TestApplication::class,
 )
 class NotificationHelperTest {
     private lateinit var context: Context
@@ -34,7 +33,7 @@ class NotificationHelperTest {
         channelManager = NotificationChannelManager(context)
         notificationSettings = NotificationSettings(context)
         notificationHelper = NotificationHelper(context, channelManager, notificationSettings)
-        
+
         // Create notification channels for testing
         channelManager.createNotificationChannels()
     }
@@ -225,8 +224,8 @@ class NotificationHelperTest {
 
             // When - Timer notification
             val timerNotification = notificationHelper.createTimerNotification(remainingTime, "Focus", true)
-        
-            // When - Break notification  
+
+            // When - Break notification
             val breakNotification = notificationHelper.createBreakNotification(remainingTime, "Break", true)
 
             // Then
@@ -247,8 +246,10 @@ class NotificationHelperTest {
 
             // Then
             assertNotNull(notification)
-            assertTrue("Timer notification should be ongoing",
-                (notification?.flags?.and(android.app.Notification.FLAG_ONGOING_EVENT) ?: 0) != 0)
+            assertTrue(
+                "Timer notification should be ongoing",
+                (notification?.flags?.and(android.app.Notification.FLAG_ONGOING_EVENT) ?: 0) != 0,
+            )
         }
 
     @Test

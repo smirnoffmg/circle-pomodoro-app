@@ -26,7 +26,7 @@ object TestUtils {
         isCompleted: Boolean = false,
         type: SessionType = SessionType.WORK,
         createdAt: Long = System.currentTimeMillis(),
-        updatedAt: Long = System.currentTimeMillis()
+        updatedAt: Long = System.currentTimeMillis(),
     ): PomodoroSession =
         PomodoroSession(
             id = id,
@@ -36,7 +36,7 @@ object TestUtils {
             isCompleted = isCompleted,
             type = type,
             createdAt = createdAt,
-            updatedAt = updatedAt
+            updatedAt = updatedAt,
         )
 
     /**
@@ -47,7 +47,7 @@ object TestUtils {
         (1..count).map { index ->
             createTestPomodoroSession(
                 id = index.toLong(),
-                startTime = System.currentTimeMillis() - (index * 25 * 60 * 1000)
+                startTime = System.currentTimeMillis() - (index * 25 * 60 * 1000),
             )
         }
 }
